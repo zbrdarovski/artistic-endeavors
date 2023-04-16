@@ -1,0 +1,45 @@
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/drawable/ic_bananas.xml" value="0.1125" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/drawable/ic_shop.xml" value="0.1125" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/drawable/ic_shop_background.xml" value="0.2046875" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout-w1240dp/activity_login.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout-w936dp/activity_login.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_article.xml" value="0.25" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_cheapest_shop.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_delete.xml" value="0.11730072463768115" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_location.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_login.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_main.xml" value="0.11730072463768115" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_recycler.xml" value="0.11096014492753623" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_shop.xml" value="0.11096014492753623" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_suggest.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-2021-22-my-second-app-zdravko-brdarovski/app/src/main/res/layout/card_view_design.xml" value="0.11096014492753623" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/drawable-v24/custom_border.xml" value="0.10885416666666667" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/drawable-v24/custom_button.xml" value="0.10885416666666667" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/drawable/ic_bananas.xml" value="0.1125" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout-w1240dp/activity_login.xml" value="0.33" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout-w936dp/activity_login.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_article.xml" value="0.22" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_delete.xml" value="0.5" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_login.xml" value="0.18" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_main.xml" value="0.33" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_recycler.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_recycler_view.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_reset.xml" value="0.25" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_shop.xml" value="0.22" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/activity_suggest.xml" value="0.25" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/layout/card_view_design.xml" value="0.1" />
+        <entry key="..\:/Users/Admin/AndroidStudioProjects/pora-my-second-app-zdravko-brdarovski/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1125" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

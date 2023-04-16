@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Artistic Endeavor</string>
+    <string name="prompt_email">Elektronska pošta</string>
+    <string name="prompt_password">Geslo</string>
+    <string name="prompt_password_repeat">Ponovi geslo</string>
+    <string name="action_sign_in">Vhod ali registracija</string>
+    <string name="action_reset">Ponastavi geslo</string>
+    <string name="action_sign_in_short">Vhod</string>
+    <string name="welcome">Pozdravljeni %1$s!</string>
+    <string name="invalid_username">Ni validno uporabniško ime</string>
+    <string name="invalid_password">Geslo mora vsebovati vsaj 8 karakterjev,
+                                    vsaj eno veliko črko,
+                                    vsaj eno malo črko,
+                                    vsaj eno številko
+                                    vsaj en specijalen karakter.</string>
+    <string name="invalid_password_repeat">Gesla se ne ujemajo.</string>
+    <string name="invalid_pw">Geslo ni validno.</string>
+    <string name="login_failed">"Vhod ni uspel"</string>
+    <string name="affirmative">da</string>
+    <string name="negative">ne</string>
+    <string name="delete_acc_confirmation">"Želite zbrisati račun?"</string>
+    <string name="logout">Izhod</string>
+    <string name="reset_password">ponastavi geslo</string>
+    <string name="delete_account">izbriši račun</string>
+</resources>
