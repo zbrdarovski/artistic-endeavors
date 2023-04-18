@@ -3,6 +3,7 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.google.firebase.auth.FirebaseAuth
 
@@ -16,7 +17,13 @@ class MainActivity : ComponentActivity() {
         action_signout.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
 
-            startActivity(Intent(this@MainActivity, RegisterActivity::class.java))
+            Toast.makeText(
+                this@MainActivity,
+                "You logged out successfully.",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            startActivity(Intent(this@MainActivity, LoginActivity::class.java))
             finish()
         }
     }

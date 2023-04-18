@@ -9,20 +9,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 
-class RegisterActivity : ComponentActivity() {
+class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+        setContentView(R.layout.activity_login)
 
-        val username: EditText = findViewById(R.id.username)
-        val password: EditText = findViewById(R.id.password)
-        val action: Button = findViewById(R.id.action_register)
-        val option: TextView = findViewById(R.id.option)
+        val username: EditText = findViewById(R.id.login_username)
+        val password: EditText = findViewById(R.id.login_password)
+        val action: Button = findViewById(R.id.action_login)
+        val option: TextView = findViewById(R.id.signup_option)
 
         option.setOnClickListener {
-            val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
+            val intent = Intent(this@LoginActivity, RegisterActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
@@ -32,7 +31,7 @@ class RegisterActivity : ComponentActivity() {
             when {
                 TextUtils.isEmpty(username.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
-                        this@RegisterActivity,
+                        this@LoginActivity,
                         "Please enter email.",
                         Toast.LENGTH_SHORT
                     ).show()
@@ -40,7 +39,7 @@ class RegisterActivity : ComponentActivity() {
 
                 TextUtils.isEmpty(password.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
-                        this@RegisterActivity,
+                        this@LoginActivity,
                         "Please enter password.",
                         Toast.LENGTH_SHORT
                     ).show()
@@ -50,29 +49,28 @@ class RegisterActivity : ComponentActivity() {
                     val email: String = username.text.toString().trim { it <= ' ' }
                     val pass: String = password.text.toString().trim { it <= ' ' }
 
-                    FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, pass)
+                    FirebaseAuth.getInstance().signInWithEmailAndPassword(email, pass)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
 
-                                val firebaseUser: FirebaseUser = task.result!!.user!!
-
                                 Toast.makeText(
-                                    this@RegisterActivity,
-                                    "You are registered successfully.",
+                                    this@LoginActivity,
+                                    "You are logged in successfully.",
                                     Toast.LENGTH_SHORT
                                 ).show()
 
                                 val intent =
-                                    Intent(this@RegisterActivity, MainActivity::class.java)
+                                    Intent(this@LoginActivity, MainActivity::class.java)
                                 intent.flags =
                                     Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                intent.putExtra("user_id", firebaseUser.uid)
+                                intent.putExtra("user_id",
+                                FirebaseAuth.getInstance().currentUser!!.uid)
                                 intent.putExtra("email_id", email)
                                 startActivity(intent)
                                 finish()
                             } else {
                                 Toast.makeText(
-                                    this@RegisterActivity,
+                                    this@LoginActivity,
                                     task.exception!!.message.toString(),
                                     Toast.LENGTH_SHORT
                                 ).show()
@@ -80,6 +78,8 @@ class RegisterActivity : ComponentActivity() {
                         }
                 }
             }
+
         }
+
     }
 }
