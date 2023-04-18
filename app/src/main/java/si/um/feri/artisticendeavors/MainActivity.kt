@@ -3,38 +3,21 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import androidx.appcompat.app.AppCompatActivity
-import com.squareup.picasso.BuildConfig
-import si.um.feri.artisticendeavors.ui.delete.DeleteActivity
-import si.um.feri.artisticendeavors.ui.reset.ResetActivity
-import timber.log.Timber
+import androidx.activity.ComponentActivity
+import com.google.firebase.auth.FirebaseAuth
 
-lateinit var us: String
-
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var resetPass : Button
-    private lateinit var deleteAcc : Button
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        resetPass = findViewById(R.id.reset_pass)
-        deleteAcc = findViewById(R.id.delete_acc)
+        val action_signout: Button = findViewById(R.id.action_signout)
 
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
+        action_signout.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
 
-        resetPass.setOnClickListener {
-            val intent = Intent(this, ResetActivity::class.java)
-            startActivity(intent)
-        }
-
-        deleteAcc.setOnClickListener {
-            val intent = Intent(this, DeleteActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this@MainActivity, RegisterActivity::class.java))
+            finish()
         }
     }
 }

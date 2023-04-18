@@ -10,7 +10,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TheSmartShopper">
         <activity
-            android:name="si.um.feri.artisticendeavors.ui.login.LoginActivity"
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -18,15 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="si.um.feri.artisticendeavors.ui.delete.DeleteActivity"
-            android:exported="false" />
-        <activity
-            android:name="si.um.feri.artisticendeavors.ui.reset.ResetActivity"
-            android:exported="false" />
-        <activity
-            android:name="si.um.feri.artisticendeavors.MainActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

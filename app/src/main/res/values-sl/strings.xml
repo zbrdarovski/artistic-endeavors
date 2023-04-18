@@ -3,9 +3,8 @@
     <string name="prompt_email">Elektronska pošta</string>
     <string name="prompt_password">Geslo</string>
     <string name="prompt_password_repeat">Ponovi geslo</string>
-    <string name="action_sign_in">Vhod ali registracija</string>
+    <string name="action_sign_in">Vpis</string>
     <string name="action_reset">Ponastavi geslo</string>
-    <string name="action_sign_in_short">Vhod</string>
     <string name="welcome">Pozdravljeni %1$s!</string>
     <string name="invalid_username">Ni validno uporabniško ime</string>
     <string name="invalid_password">Geslo mora vsebovati vsaj 8 karakterjev,
@@ -22,4 +21,9 @@
     <string name="logout">Izhod</string>
     <string name="reset_password">ponastavi geslo</string>
     <string name="delete_account">izbriši račun</string>
+    <string name="no_account">Še nimate računa?</string>
+    <string name="option_sign_up">Prijavi se!</string>
+    <string name="action_sign_up">prijava</string>
+    <string name="has_account">Že imate račun?</string>
+    <string name="option_sign_in">Vpiši se!</string>
 </resources>

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "417184476304",
+    "project_id": "artistic-endeavors",
+    "storage_bucket": "artistic-endeavors.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417184476304:android:c1ea2be6eec01708493c15",
+        "android_client_info": {
+          "package_name": "si.um.feri.artisticendeavors"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417184476304-ie2nc1qiqtm1nb9bdups0st432tfojqo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "si.um.feri.artisticendeavors",
+            "certificate_hash": "941a95fcdd56297badbe4e0636a4d519c5028382"
+          }
+        },
+        {
+          "client_id": "417184476304-5b0hklb7q9i5c2do5sl68he9uqg4pedu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLhHQs4_HSD9SRn-OypNSZbUqevnKm7Gg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417184476304-5b0hklb7q9i5c2do5sl68he9uqg4pedu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
