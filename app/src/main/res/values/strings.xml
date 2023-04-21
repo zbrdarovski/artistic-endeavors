@@ -30,4 +30,6 @@
     <string name="username">Username</string>
     <string name="profile_picture">profile picture</string>
     <string name="change_photo">change photo</string>
+    <string name="artistic_endeavors">Artistic Endeavors</string>
+    <string name="account_page">Account Page</string>
 </resources>

@@ -3,9 +3,6 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -16,32 +13,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
 
 class RegisterActivity : ComponentActivity() {
+
+    private lateinit var binding: ActivityRegisterBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
-
-        val email: EditText = findViewById(R.id.email)
-        val username: EditText = findViewById(R.id.username)
-        val password: EditText = findViewById(R.id.password)
-        val repeat: EditText = findViewById(R.id.repeat)
-        val action: Button = findViewById(R.id.action_register)
-        val option: TextView = findViewById(R.id.option)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val pattern = Regex("^(?=.{8,20}\$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])\$")
 
-        option.setOnClickListener {
+        binding.option.setOnClickListener {
             val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
         }
 
-        action.setOnClickListener {
+        binding.actionRegister.setOnClickListener {
             when {
-                TextUtils.isEmpty(email.text.toString().trim { it <= ' ' }) -> {
+                TextUtils.isEmpty(binding.email.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Please enter email.",
@@ -49,7 +43,7 @@ class RegisterActivity : ComponentActivity() {
                     ).show()
                 }
 
-                TextUtils.isEmpty(username.text.toString().trim { it <= ' ' }) -> {
+                TextUtils.isEmpty(binding.username.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Please enter username.",
@@ -57,7 +51,7 @@ class RegisterActivity : ComponentActivity() {
                     ).show()
                 }
 
-                !pattern.containsMatchIn(username.text.toString().trim { it <= ' ' }) -> {
+                !pattern.containsMatchIn(binding.username.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Username is 8-20 characters long." +
@@ -69,7 +63,7 @@ class RegisterActivity : ComponentActivity() {
                     ).show()
                 }
 
-                TextUtils.isEmpty(password.text.toString().trim { it <= ' ' }) -> {
+                TextUtils.isEmpty(binding.password.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Please enter password.",
@@ -77,7 +71,7 @@ class RegisterActivity : ComponentActivity() {
                     ).show()
                 }
 
-                TextUtils.isEmpty(repeat.text.toString().trim { it <= ' ' }) -> {
+                TextUtils.isEmpty(binding.repeat.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Please repeat password.",
@@ -85,7 +79,7 @@ class RegisterActivity : ComponentActivity() {
                     ).show()
                 }
 
-                password.text.toString() != repeat.text.toString() -> {
+                binding.password.text.toString() != binding.repeat.text.toString() -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Passwords don't match.",
@@ -94,8 +88,8 @@ class RegisterActivity : ComponentActivity() {
                 }
 
                 else -> {
-                    val em: String = email.text.toString().trim { it <= ' ' }
-                    val pass: String = password.text.toString().trim { it <= ' ' }
+                    val em: String = binding.email.text.toString().trim { it <= ' ' }
+                    val pass: String = binding.password.text.toString().trim { it <= ' ' }
                     val auth = FirebaseAuth.getInstance()
                     auth.createUserWithEmailAndPassword(em, pass)
                         .addOnCompleteListener { task ->
@@ -105,19 +99,21 @@ class RegisterActivity : ComponentActivity() {
 
                                 auth.currentUser?.let { user ->
                                     val profileUpdates = UserProfileChangeRequest.Builder()
-                                        .setDisplayName(username.text.toString().trim { it <= ' ' }).build()
+                                        .setDisplayName(
+                                            binding.username.text.toString().trim { it <= ' ' })
+                                        .build()
 
 
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
                                             user.updateProfile(profileUpdates).await()
-                                        } catch(e:Exception){
+                                        } catch (e: Exception) {
                                             withContext(Dispatchers.Main) {
-                                            Toast.makeText(
-                                                this@RegisterActivity,
-                                                e.message,
-                                                Toast.LENGTH_LONG
-                                            ).show()
+                                                Toast.makeText(
+                                                    this@RegisterActivity,
+                                                    e.message,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             }
                                         }
                                     }
