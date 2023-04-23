@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/register_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,7 +30,7 @@
             android:selectAllOnFocus="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/app_title" />
+            app:layout_constraintTop_toBottomOf="@+id/account_title" />
 
         <EditText
             android:id="@+id/username"
@@ -94,7 +95,7 @@
             android:background="@drawable/custom_button"
             android:enabled="true"
             android:text="@string/action_sign_up"
-            android:textColor="#004D40"
+            android:textColor="@color/teal_700"
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
@@ -124,7 +125,7 @@
             app:layout_constraintStart_toEndOf="@+id/account" />
 
         <TextView
-            android:id="@+id/app_title"
+            android:id="@+id/account_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"

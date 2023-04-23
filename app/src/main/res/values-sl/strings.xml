@@ -31,5 +31,9 @@
     <string name="profile_picture">profilna slika</string>
     <string name="change_photo">spremeni sliko</string>
     <string name="artistic_endeavors">Artistic Endeavors</string>
-    <string name="account_page">Račun</string>
+    <string name="title_activity_account">AccountActivity</string>
+    <string name="profile">PROFIL</string>
+    <string name="account">RAČUN</string>
+    <string name="go_to_mainactivity">Pojdi do MainActivity</string>
+    <string name="title_activity_profile">ProfileActivity</string>
 </resources>

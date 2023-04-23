@@ -31,5 +31,9 @@
     <string name="profile_picture">profile picture</string>
     <string name="change_photo">change photo</string>
     <string name="artistic_endeavors">Artistic Endeavors</string>
-    <string name="account_page">Account Page</string>
+    <string name="title_activity_account">AccountActivity</string>
+    <string name="profile">PROFILE</string>
+    <string name="account">ACCOUNT</string>
+    <string name="go_to_mainactivity">Go to MainActivity</string>
+    <string name="title_activity_profile">ProfileActivity</string>
 </resources>

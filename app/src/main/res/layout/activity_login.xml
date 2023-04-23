@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/activity_container"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/login_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -29,7 +30,7 @@
             android:selectAllOnFocus="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/app_title" />
+            app:layout_constraintTop_toBottomOf="@+id/account_title" />
 
         <EditText
             android:id="@+id/login_password"
@@ -60,7 +61,7 @@
             android:background="@drawable/custom_button"
             android:enabled="true"
             android:text="@string/action_sign_in"
-            android:textColor="#004D40"
+            android:textColor="@color/teal_700"
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -89,7 +90,7 @@
             app:layout_constraintStart_toEndOf="@+id/login_account" />
 
         <TextView
-            android:id="@+id/app_title"
+            android:id="@+id/account_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
