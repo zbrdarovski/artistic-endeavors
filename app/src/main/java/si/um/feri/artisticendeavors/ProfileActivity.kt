@@ -6,10 +6,12 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding
+
 
 class ProfileActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProfileBinding
@@ -61,6 +63,14 @@ class ProfileActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+        binding.rvContacts.adapter = PostAdapter(this, createContacts())
+        binding.rvContacts.layoutManager = LinearLayoutManager(this)
+    }
+
+    private fun createContacts(): List<Post> {
+        val posts = mutableListOf<Post>()
+        for (i in 1..10) posts.add(Post("Post #$i", "desc"))
+        return posts
     }
 
     // Add state listener

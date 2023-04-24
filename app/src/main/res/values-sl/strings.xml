@@ -36,4 +36,7 @@
     <string name="account">RAČUN</string>
     <string name="go_to_mainactivity">Pojdi do MainActivity</string>
     <string name="title_activity_profile">ProfileActivity</string>
+    <string name="rv_item">rv_item</string>
+    <string name="post_description">Opis: %s</string>
+    <string name="post_image">slika objave</string>
 </resources>
