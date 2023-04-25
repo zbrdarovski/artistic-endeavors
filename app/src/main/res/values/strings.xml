@@ -39,4 +39,6 @@
     <string name="rv_item">rv_item</string>
     <string name="post_description">Description: %s</string>
     <string name="post_image">post image</string>
+    <string name="add_photo">Add</string>
+    <string name="enter_description">Enter descrtiption…</string>
 </resources>

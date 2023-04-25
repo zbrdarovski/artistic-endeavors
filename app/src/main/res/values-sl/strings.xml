@@ -39,4 +39,6 @@
     <string name="rv_item">rv_item</string>
     <string name="post_description">Opis: %s</string>
     <string name="post_image">slika objave</string>
+    <string name="add_photo">Dodaj</string>
+    <string name="enter_description">Vnesi opis…</string>
 </resources>

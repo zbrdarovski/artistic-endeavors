@@ -29,8 +29,8 @@ class AccountActivity : AppCompatActivity() {
 
     private val storage = Firebase.storage
     private val storageRef = storage.reference
-    private val imageName = "${user?.displayName}.jpg"
-    private val imageRef = storageRef.child(imageName)
+    private val imageName = "${user?.displayName}0.jpg"
+    private val imageRef = storageRef.child("users/${user?.displayName}/$imageName")
 
     // If the user is logged out, go back to the LoginActivity
     private var authStateListener =
