@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,7 +46,7 @@ class RegisterActivity : AppCompatActivity() {
         // Register a new user to Firebase
         binding.actionRegister.setOnClickListener {
             when {
-                // Check whether email's field is emtpy
+                // Check whether email's field is empty
                 TextUtils.isEmpty(binding.email.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
@@ -107,6 +109,7 @@ class RegisterActivity : AppCompatActivity() {
                 else -> {
                     val em: String = binding.email.text.toString().trim { it <= ' ' }
                     val pass: String = binding.password.text.toString().trim { it <= ' ' }
+                    val username: String = binding.username.text.toString().trim { it <= ' ' }
                     val auth = FirebaseAuth.getInstance()
                     auth.createUserWithEmailAndPassword(em, pass)
                         .addOnCompleteListener { task ->
@@ -114,16 +117,20 @@ class RegisterActivity : AppCompatActivity() {
 
                                 val firebaseUser: FirebaseUser = task.result!!.user!!
 
+                                // Update the user's display name
                                 auth.currentUser?.let { user ->
                                     val profileUpdates = UserProfileChangeRequest.Builder()
-                                        .setDisplayName(
-                                            binding.username.text.toString().trim { it <= ' ' })
+                                        .setDisplayName(username)
                                         .build()
-
 
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
                                             user.updateProfile(profileUpdates).await()
+                                            // Save username to Firestore collection 'users'
+                                            val db = Firebase.firestore
+                                            val userDocument =
+                                                db.collection("users").document(firebaseUser.uid)
+                                            userDocument.set(mapOf("username" to username))
                                         } catch (e: Exception) {
                                             withContext(Dispatchers.Main) {
                                                 Toast.makeText(

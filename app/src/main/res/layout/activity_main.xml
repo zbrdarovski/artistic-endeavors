@@ -23,6 +23,7 @@
             android:background="@color/teal_200"
             android:minHeight="?attr/actionBarSize"
             android:theme="?attr/actionBarTheme"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -32,7 +33,7 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="16dp"
-            android:contentDescription="@string/go_to_mainactivity"
+            android:contentDescription="@string/go_to_main_activity"
             app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
             app:layout_constraintEnd_toStartOf="@+id/profile_option"
             app:layout_constraintTop_toTopOf="@+id/main_toolbar"
@@ -59,11 +60,11 @@
             android:textColor="@color/black"
             android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/action_signout"
+            app:layout_constraintEnd_toStartOf="@+id/action_sign_out"
             app:layout_constraintTop_toTopOf="@+id/main_toolbar" />
 
         <ImageView
-            android:id="@+id/action_signout"
+            android:id="@+id/action_sign_out"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="32dp"
@@ -72,6 +73,36 @@
             app:layout_constraintEnd_toEndOf="@+id/main_toolbar"
             app:layout_constraintTop_toTopOf="@+id/main_toolbar"
             app:srcCompat="@mipmap/ic_logout" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPosts"
+            android:layout_width="match_parent"
+            android:layout_height="600dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_toolbar"
+            app:layout_constraintVertical_bias="1.0"
+            tools:listitem="@layout/item_post" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabCreate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="550dp"
+            android:layout_marginEnd="16dp"
+            android:clickable="true"
+            android:contentDescription="@string/add_photo"
+            android:tint="@android:color/white"
+            app:backgroundTint="@color/teal_200"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_toolbar"
+            app:srcCompat="@android:drawable/ic_input_add" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

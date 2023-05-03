@@ -32,7 +32,7 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="16dp"
-            android:contentDescription="@string/go_to_mainactivity"
+            android:contentDescription="@string/go_to_main_activity"
             app:layout_constraintBottom_toBottomOf="@+id/account_toolbar"
             app:layout_constraintEnd_toStartOf="@+id/profile_option"
             app:layout_constraintTop_toTopOf="@+id/account_toolbar"
@@ -59,11 +59,11 @@
             android:textColor="@color/black"
             android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="@+id/account_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/action_signout"
+            app:layout_constraintEnd_toStartOf="@+id/action_sign_out"
             app:layout_constraintTop_toTopOf="@+id/account_toolbar" />
 
         <ImageView
-            android:id="@+id/action_signout"
+            android:id="@+id/action_sign_out"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="32dp"

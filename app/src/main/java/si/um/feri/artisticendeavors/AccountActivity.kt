@@ -10,10 +10,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuth.AuthStateListener
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
@@ -23,32 +24,44 @@ import java.io.ByteArrayOutputStream
 class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAccountBinding
     private val auth = FirebaseAuth.getInstance()
-    private val user = this.auth.currentUser
+    private lateinit var db: FirebaseFirestore
+
+    private lateinit var imageRef: StorageReference
 
     private lateinit var galleryLauncher: ActivityResultLauncher<String>
 
     private val storage = Firebase.storage
     private val storageRef = storage.reference
-    private val imageName = "${user?.displayName}0.jpg"
-    private val imageRef = storageRef.child("users/${user?.displayName}/$imageName")
-
-    // If the user is logged out, go back to the LoginActivity
-    private var authStateListener =
-        AuthStateListener { firebaseAuth ->
-            val firebaseUser = firebaseAuth.currentUser
-            if (firebaseUser == null) {
-                val intent = Intent(this@AccountActivity, LoginActivity::class.java)
-                startActivity(intent)
-            }
-        }
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        db = Firebase.firestore
 
-        FirebaseApp.initializeApp(this)
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val currentUserId = currentUser?.uid
+
+        db.collection("users").document(currentUserId!!)
+            .get()
+            .continueWith { userDocument ->
+                val user = userDocument.result?.toObject(User::class.java)
+                val username = user?.username
+                binding.usern.text = username
+                imageRef = storageRef.child("images/${username}.jpg")
+
+                // Load profile image
+                imageRef.downloadUrl
+                    .addOnSuccessListener { uri ->
+                        // Use Picasso to load the image into the ImageView
+                        Picasso.get().load(uri).into(binding.profpic)
+                    }
+                    .addOnFailureListener { exception ->
+                        // Handle any errors that may occur
+                        Timber.e("TAG", "Error downloading image: $exception")
+                    }
+            }
 
         // Switch to MainActivity
         binding.homeOption.setOnClickListener {
@@ -69,8 +82,11 @@ class AccountActivity : AppCompatActivity() {
         }
 
         // Sign out from the app
-        binding.actionSignout.setOnClickListener {
+        binding.actionSignOut.setOnClickListener {
             this.auth.signOut()
+            val intent = Intent(this@AccountActivity, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
 
             Toast.makeText(
                 this@AccountActivity,
@@ -79,22 +95,10 @@ class AccountActivity : AppCompatActivity() {
             ).show()
         }
 
-        // Load profile image
-        imageRef.downloadUrl
-            .addOnSuccessListener { uri ->
-                // Use Picasso to load the image into the ImageView
-                Picasso.get().load(uri).into(binding.profpic)
-            }
-            .addOnFailureListener { exception ->
-                // Handle any errors that may occur
-                Timber.e("TAG", "Error downloading image: $exception")
-            }
-
         val listener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
             // Scale the image to prevent using too much memory
             decoder.setTargetSize(100, 100)
         }
-
 
         galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { imageUri ->
@@ -103,8 +107,6 @@ class AccountActivity : AppCompatActivity() {
                     ImageDecoder.createSource(contentResolver, imageUri),
                     listener
                 )
-                // Load Bitmap into ImageView
-                binding.profpic.setImageBitmap(bitmap)
 
                 // Convert the Bitmap to ByteArray
                 val baos = ByteArrayOutputStream()
@@ -117,6 +119,8 @@ class AccountActivity : AppCompatActivity() {
                     // Image uploaded successfully
                     val downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl.toString()
                     Timber.d("Image uploaded successfully: $downloadUrl")
+                    val intent = Intent(this@AccountActivity, AccountActivity::class.java)
+                    startActivity(intent)
                 }.addOnFailureListener { exception ->
                     // Image upload failed
                     Timber.e("Image upload failed", exception)
@@ -128,25 +132,5 @@ class AccountActivity : AppCompatActivity() {
         binding.change.setOnClickListener {
             galleryLauncher.launch("image/*")
         }
-
-        // Display username
-        binding.usern.text = user?.displayName
-
-        // Display profile picture
-        Picasso.get().load(user?.photoUrl).into(binding.profpic)
-    }
-
-    // Add state listener
-    @Override
-    override fun onStart() {
-        super.onStart()
-        this.auth.addAuthStateListener(authStateListener)
-    }
-
-    // Remove state listener
-    @Override
-    override fun onStop() {
-        super.onStop()
-        this.auth.removeAuthStateListener(authStateListener)
     }
 }

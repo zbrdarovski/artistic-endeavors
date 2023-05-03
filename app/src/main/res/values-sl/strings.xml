@@ -34,11 +34,13 @@
     <string name="title_activity_account">AccountActivity</string>
     <string name="profile">PROFIL</string>
     <string name="account">RAČUN</string>
-    <string name="go_to_mainactivity">Pojdi do MainActivity</string>
+    <string name="go_to_main_activity">Pojdi do MainActivity</string>
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="rv_item">rv_item</string>
-    <string name="post_description">Opis: %s</string>
+    <string name="post_description">Opis…</string>
     <string name="post_image">slika objave</string>
     <string name="add_photo">Dodaj</string>
-    <string name="enter_description">Vnesi opis…</string>
+    <string name="please_enter_post_description">Vnesite opis objave</string>
+    <string name="post_photo">Objavi fotografijo</string>
+    <string name="no_posts">Na žalost trenutno ni objav za prikaz. :(</string>
 </resources>

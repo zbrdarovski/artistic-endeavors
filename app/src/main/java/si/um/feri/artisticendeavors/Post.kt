@@ -1,6 +1,8 @@
 package si.um.feri.artisticendeavors
 
 data class Post(
-    val description: String,
-    val imageUrl: String?
+    var creation_time_milliseconds: Long = 0,
+    var description: String = "",
+    var image_url: String = "",
+    var user: User? = null
 )

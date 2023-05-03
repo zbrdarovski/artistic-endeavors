@@ -34,11 +34,13 @@
     <string name="title_activity_account">AccountActivity</string>
     <string name="profile">PROFILE</string>
     <string name="account">ACCOUNT</string>
-    <string name="go_to_mainactivity">Go to MainActivity</string>
+    <string name="go_to_main_activity">Go to MainActivity</string>
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="rv_item">rv_item</string>
-    <string name="post_description">Description: %s</string>
+    <string name="post_description">Description…</string>
     <string name="post_image">post image</string>
     <string name="add_photo">Add</string>
-    <string name="enter_description">Enter descrtiption…</string>
+    <string name="please_enter_post_description">Please enter post description</string>
+    <string name="post_photo">Post photo</string>
+    <string name="no_posts">Unfortunately, there are currently no posts to display. :(</string>
 </resources>

@@ -7,7 +7,7 @@
     android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/profile_container"
+        android:id="@+id/main_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -17,12 +17,13 @@
         tools:context=".ProfileActivity">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/activity_toolbar"
+            android:id="@+id/profile_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/teal_200"
             android:minHeight="?attr/actionBarSize"
             android:theme="?attr/actionBarTheme"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -32,10 +33,10 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="16dp"
-            android:contentDescription="@string/go_to_mainactivity"
-            app:layout_constraintBottom_toBottomOf="@+id/activity_toolbar"
+            android:contentDescription="@string/go_to_main_activity"
+            app:layout_constraintBottom_toBottomOf="@+id/profile_toolbar"
             app:layout_constraintEnd_toStartOf="@+id/profile_option"
-            app:layout_constraintTop_toTopOf="@+id/activity_toolbar"
+            app:layout_constraintTop_toTopOf="@+id/profile_toolbar"
             app:srcCompat="@mipmap/ic_home" />
 
         <TextView
@@ -46,9 +47,9 @@
             android:text="@string/profile"
             android:textColor="@color/black"
             android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@+id/activity_toolbar"
+            app:layout_constraintBottom_toBottomOf="@+id/profile_toolbar"
             app:layout_constraintEnd_toStartOf="@+id/account_option"
-            app:layout_constraintTop_toTopOf="@+id/activity_toolbar" />
+            app:layout_constraintTop_toTopOf="@+id/profile_toolbar" />
 
         <TextView
             android:id="@+id/account_option"
@@ -58,52 +59,34 @@
             android:text="@string/account"
             android:textColor="@color/black"
             android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@+id/activity_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/action_signout"
-            app:layout_constraintTop_toTopOf="@+id/activity_toolbar" />
+            app:layout_constraintBottom_toBottomOf="@+id/profile_toolbar"
+            app:layout_constraintEnd_toStartOf="@+id/action_sign_out"
+            app:layout_constraintTop_toTopOf="@+id/profile_toolbar" />
 
         <ImageView
-            android:id="@+id/action_signout"
+            android:id="@+id/action_sign_out"
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:layout_marginEnd="32dp"
             android:contentDescription="@string/logout"
-            app:layout_constraintBottom_toBottomOf="@+id/activity_toolbar"
-            app:layout_constraintEnd_toEndOf="@+id/activity_toolbar"
-            app:layout_constraintTop_toTopOf="@+id/activity_toolbar"
+            app:layout_constraintBottom_toBottomOf="@+id/profile_toolbar"
+            app:layout_constraintEnd_toEndOf="@+id/profile_toolbar"
+            app:layout_constraintTop_toTopOf="@+id/profile_toolbar"
             app:srcCompat="@mipmap/ic_logout" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvContacts"
-            android:layout_width="350dp"
-            android:layout_height="500dp"
+            android:id="@+id/rvPosts"
+            android:layout_width="match_parent"
+            android:layout_height="600dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/activity_toolbar"
+            app:layout_constraintTop_toBottomOf="@+id/profile_toolbar"
             tools:listitem="@layout/item_post" />
-
-        <TextView
-            android:id="@+id/add"
-            android:layout_width="150dp"
-            android:layout_height="75dp"
-            android:layout_marginTop="16dp"
-            android:background="@color/teal_200"
-            android:drawablePadding="4dp"
-            android:gravity="center_vertical|center_horizontal"
-            android:paddingStart="16dp"
-            android:paddingTop="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp"
-            android:text="@string/add_photo"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            app:drawableEndCompat="@mipmap/ic_add"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rvContacts" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
