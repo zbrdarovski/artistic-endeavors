@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var posts: MutableList<Post>
     private lateinit var adapter: PostAdapter
+    private lateinit var listenerRegistration: ListenerRegistration
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,34 +37,28 @@ class MainActivity : AppCompatActivity() {
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
 
-        var isEmpty = true
-
         val postsReference = db.collection("posts").limit(20)
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
-        postsReference.addSnapshotListener { snapshot, exception ->
+        listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
             if (exception != null || snapshot == null) {
                 Timber.e(exception?.message)
                 return@addSnapshotListener
             }
             val listOfPosts = snapshot.toObjects(Post::class.java)
-            if (listOfPosts.isNotEmpty()) {
-                isEmpty = false
+            if (listOfPosts.isEmpty()) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Unfortunately, there are currently no posts to display. :(",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                posts.clear()
+                posts.addAll(listOfPosts)
+                adapter.apply {
+                    notifyItemRangeRemoved(0, itemCount)
+                    notifyItemRangeInserted(0, posts.size)
+                }
             }
-            posts.clear()
-            posts.addAll(listOfPosts)
-            adapter.notifyDataSetChanged()
-        }
-
-        if (isEmpty) {
-            val post = Post(
-                creation_time_milliseconds = System.currentTimeMillis(),
-                description = "Unfortunately, there are currently no posts to display. :(",
-                image_url = "https://picsum.photos/200/300",
-                user = auth.currentUser?.displayName?.let { User(it) }
-            )
-            posts.clear()
-            posts.add(post)
-            adapter.notifyDataSetChanged()
         }
 
         // Switch to MainActivity
@@ -96,5 +92,10 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        listenerRegistration.remove()
     }
 }

@@ -43,4 +43,5 @@
     <string name="please_enter_post_description">Please enter post description</string>
     <string name="post_photo">Post photo</string>
     <string name="no_posts">Unfortunately, there are currently no posts to display. :(</string>
+    <string name="no_posts_found">No posts found.</string>
 </resources>

@@ -67,18 +67,21 @@ class AccountActivity : AppCompatActivity() {
         binding.homeOption.setOnClickListener {
             val intent = Intent(this@AccountActivity, MainActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         // Switch to ProfileActivity
         binding.profileOption.setOnClickListener {
             val intent = Intent(this@AccountActivity, ProfileActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         // Switch to AccountActivity
         binding.accountOption.setOnClickListener {
             val intent = Intent(this@AccountActivity, AccountActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
         // Sign out from the app
