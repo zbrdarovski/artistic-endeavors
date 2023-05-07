@@ -21,7 +21,7 @@ class ProfileActivity : AppCompatActivity() {
     private val auth = FirebaseAuth.getInstance()
     private lateinit var db: FirebaseFirestore
     private lateinit var posts: MutableList<Post>
-    private lateinit var adapter: PostAdapter
+    private lateinit var adapter: ProfilePostAdapter
     private lateinit var listenerRegistration: ListenerRegistration
 
     @RequiresApi(Build.VERSION_CODES.P)
@@ -32,7 +32,7 @@ class ProfileActivity : AppCompatActivity() {
 
         db = Firebase.firestore
         posts = mutableListOf()
-        adapter = PostAdapter(posts)
+        adapter = ProfilePostAdapter(posts)
 
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)

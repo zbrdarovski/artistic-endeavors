@@ -9,15 +9,15 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
-import si.um.feri.artisticendeavors.databinding.ItemPostBinding
+import si.um.feri.artisticendeavors.databinding.MainItemPostBinding
 import timber.log.Timber
 
-class PostAdapter(private val posts: List<Post>) :
-    RecyclerView.Adapter<PostAdapter.ViewHolder>() {
+class MainPostAdapter(private val posts: List<Post>) :
+    RecyclerView.Adapter<MainPostAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val binding = ItemPostBinding.inflate(inflater, parent, false)
+        val binding = MainItemPostBinding.inflate(inflater, parent, false)
         return ViewHolder(binding)
     }
 
@@ -27,7 +27,7 @@ class PostAdapter(private val posts: List<Post>) :
         holder.bind(posts[position])
     }
 
-    inner class ViewHolder(private val binding: ItemPostBinding) :
+    inner class ViewHolder(private val binding: MainItemPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(post: Post) {
             val username = post.user?.username as String
@@ -57,7 +57,7 @@ class PostAdapter(private val posts: List<Post>) :
                         }
                 }
             binding.tvRelativeTime.text =
-                DateUtils.getRelativeTimeSpanString(post.creation_time_milliseconds)
+                post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
         }
     }
 }

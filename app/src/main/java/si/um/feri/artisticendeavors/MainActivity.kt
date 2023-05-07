@@ -16,12 +16,13 @@ import com.google.firebase.ktx.Firebase
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding
 import timber.log.Timber
 
+
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val auth = FirebaseAuth.getInstance()
     private lateinit var db: FirebaseFirestore
     private lateinit var posts: MutableList<Post>
-    private lateinit var adapter: PostAdapter
+    private lateinit var adapter: MainPostAdapter
     private lateinit var listenerRegistration: ListenerRegistration
 
     @RequiresApi(Build.VERSION_CODES.P)
@@ -32,10 +33,11 @@ class MainActivity : AppCompatActivity() {
 
         db = Firebase.firestore
         posts = mutableListOf()
-        adapter = PostAdapter(posts)
+        adapter = MainPostAdapter(posts)
 
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
+
 
         val postsReference = db.collection("posts").limit(20)
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)

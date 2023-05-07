@@ -44,4 +44,5 @@
     <string name="post_photo">Post photo</string>
     <string name="no_posts">Unfortunately, there are currently no posts to display. :(</string>
     <string name="no_posts_found">No posts found.</string>
+    <string name="delete_post">Delete post</string>
 </resources>
