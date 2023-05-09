@@ -3,6 +3,7 @@ package si.um.feri.artisticendeavors
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -34,6 +35,7 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
         val post = posts[position]
         holder.bind(post)
         holder.setDeleteClickListener(post)
+        holder.setEditClickListener(post)
     }
 
     inner class ViewHolder(private val binding: ProfileItemPostBinding) :
@@ -89,6 +91,39 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
                             }
                     }
                     .setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
+        }
+
+        fun setEditClickListener(post: Post) {
+            binding.editPost.setOnClickListener {
+                // Create an EditText view for user input
+                val editText = EditText(binding.root.context)
+                editText.setText(post.description)
+
+                // Create an AlertDialog to display the EditText view
+                val builder = AlertDialog.Builder(binding.root.context)
+                builder.setTitle("Edit Post")
+                    .setView(editText)
+                    .setPositiveButton("Save") { _, _ ->
+                        // Get the new description entered by the user
+                        val newDescription = editText.text.toString().trim()
+
+                        // Update the post's description in the database
+                        val postRef = db.collection("posts").document(post.id!!)
+                        postRef.update("description", newDescription)
+                            .addOnSuccessListener {
+                                // Update the post object and notify the adapter
+                                post.description = newDescription
+                                notifyItemChanged(posts.indexOf(post))
+                            }
+                            .addOnFailureListener { e ->
+                                Timber.w("Error updating post description", e)
+                            }
+                    }
+                    .setNegativeButton("Cancel") { dialog, _ ->
                         dialog.dismiss()
                     }
                     .show()
