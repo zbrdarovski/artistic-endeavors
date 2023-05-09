@@ -136,21 +136,32 @@ class ProfileActivity : AppCompatActivity() {
                     if (currentUser != null) {
                         // Choose image from gallery
                         galleryLauncher.launch("image/*")
+
                         val newPost = Post(
-                            id = null,
-                            user = currentUser.displayName?.let { it1 ->
-                                User(
-                                    username = it1
-                                )
-                            },
+                            user = currentUser.displayName?.let { it1 -> User(username = it1) },
                             description = postText,
                             creation_time_milliseconds = System.currentTimeMillis(),
                             image_url = null // Set default value
                         )
+
                         db.collection("posts")
                             .add(newPost)
                             .addOnSuccessListener { documentReference ->
-                                Timber.d("DocumentSnapshot written with ID: ${documentReference.id}")
+                                // Get the document ID and update the new post object with it
+                                val postId = documentReference.id
+                                newPost.id = postId
+
+                                // Update the post document with the generated ID
+                                db.collection("posts")
+                                    .document(postId)
+                                    .set(newPost)
+                                    .addOnSuccessListener {
+                                        // Log the document ID to verify that it was added correctly
+                                        Timber.d("DocumentSnapshot written with ID: $postId")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Timber.e(e, "Error updating document")
+                                    }
                             }
                             .addOnFailureListener { e ->
                                 Timber.e(e, "Error adding document")
@@ -164,7 +175,7 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-        override fun onDestroy() {
+    override fun onDestroy() {
         super.onDestroy()
         // Remove listener to prevent memory leaks
         listenerRegistration.remove()
