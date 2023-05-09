@@ -1,5 +1,6 @@
 package si.um.feri.artisticendeavors
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
@@ -36,38 +37,71 @@ class ProfileActivity : AppCompatActivity() {
     private val storageRef = storage.reference
     private lateinit var imageRef: StorageReference
     private var downloadUrl: String? = null
+    private lateinit var postText: String
 
     @RequiresApi(Build.VERSION_CODES.P)
-    val listener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
-        // Scale the image to prevent using too much memory
-        decoder.setTargetSize(100, 100)
-    }
+    val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val imageUri = result.data?.data
+            if (imageUri != null) {
+                // Convert image into Bitmap
+                val bitmap = ImageDecoder.decodeBitmap(
+                    ImageDecoder.createSource(contentResolver, imageUri)
+                )
 
-    @RequiresApi(Build.VERSION_CODES.P)
-    val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { imageUri ->
-            // Convert image into Bitmap
-            val bitmap = ImageDecoder.decodeBitmap(
-                ImageDecoder.createSource(contentResolver, imageUri),
-                listener
-            )
+                // Convert the Bitmap to ByteArray
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                val data = byteArrayOutputStream.toByteArray()
 
-            // Convert the Bitmap to ByteArray
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            val data = baos.toByteArray()
+                imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
-            imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
+                // Upload the image to Firebase Storage
+                val uploadTask = imageRef.putBytes(data)
+                uploadTask.addOnSuccessListener {
+                    // Image uploaded successfully
+                    imageRef.downloadUrl.addOnSuccessListener { uri ->
+                        downloadUrl = uri.toString()
+                        Timber.d("Image uploaded successfully: $downloadUrl")
 
-            // Upload the image to Firebase Storage
-            val uploadTask = imageRef.putBytes(data)
-            uploadTask.addOnSuccessListener { taskSnapshot ->
-                // Image uploaded successfully
-                downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl.toString()
-                Timber.d("Image uploaded successfully: $downloadUrl")
-            }.addOnFailureListener { exception ->
-                // Image upload failed
-                Timber.e(exception, "Image upload failed")
+                        val currentUser = auth.currentUser
+                        // Create a new post object with the image URL
+                        val newPost = Post(
+                            user = currentUser?.displayName?.let { it1 -> User(username = it1) },
+                            description = postText,
+                            creation_time_milliseconds = System.currentTimeMillis(),
+                            image_url = downloadUrl
+                        )
+
+                        db.collection("posts")
+                            .add(newPost)
+                            .addOnSuccessListener { documentReference ->
+                                // Get the document ID and update the new post object with it
+                                val postId = documentReference.id
+                                newPost.id = postId
+
+                                // Update the post document with the generated ID
+                                db.collection("posts")
+                                    .document(postId)
+                                    .set(newPost)
+                                    .addOnSuccessListener {
+                                        // Log the document ID to verify that it was added correctly
+                                        Timber.d("DocumentSnapshot written with ID: $postId")
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Timber.e(e, "Error updating document")
+                                    }
+                            }
+                            .addOnFailureListener { e ->
+                                Timber.e(e, "Error adding document")
+                            }
+                    }.addOnFailureListener { exception ->
+                        Timber.e(exception, "Error getting download URL")
+                    }
+                }.addOnFailureListener { exception ->
+                    // Image upload failed
+                    Timber.e(exception, "Image upload failed")
+                }
             }
         }
     }
@@ -130,48 +164,55 @@ class ProfileActivity : AppCompatActivity() {
 
             // Set up the buttons
             builder.setPositiveButton("Post") { _, _ ->
-                val postText = input.text.toString().trim()
+                postText = input.text.toString().trim()
                 if (postText.isNotEmpty()) {
                     val currentUser = auth.currentUser
                     if (currentUser != null) {
-                        // Choose image from gallery
-                        galleryLauncher.launch("image/*")
-
-                        val newPost = Post(
-                            user = currentUser.displayName?.let { it1 -> User(username = it1) },
-                            description = postText,
-                            creation_time_milliseconds = System.currentTimeMillis(),
-                            image_url = null // Set default value
-                        )
-
-                        db.collection("posts")
-                            .add(newPost)
-                            .addOnSuccessListener { documentReference ->
-                                // Get the document ID and update the new post object with it
-                                val postId = documentReference.id
-                                newPost.id = postId
-
-                                // Update the post document with the generated ID
-                                db.collection("posts")
-                                    .document(postId)
-                                    .set(newPost)
-                                    .addOnSuccessListener {
-                                        // Log the document ID to verify that it was added correctly
-                                        Timber.d("DocumentSnapshot written with ID: $postId")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Timber.e(e, "Error updating document")
-                                    }
-                            }
-                            .addOnFailureListener { e ->
-                                Timber.e(e, "Error adding document")
-                            }
+                        // Launch the gallery
+                        val intent = Intent(Intent.ACTION_GET_CONTENT)
+                        intent.type = "image/*"
+                        galleryLauncher.launch(intent)
                     }
                 }
             }
             builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
 
             builder.show()
+        }
+
+        // Switch to MainActivity
+        binding.homeOption.setOnClickListener {
+            val intent = Intent(this@ProfileActivity, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        // Switch to ProfileActivity
+        binding.profileOption.setOnClickListener {
+            val intent = Intent(this@ProfileActivity, ProfileActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        // Switch to AccountActivity
+        binding.accountOption.setOnClickListener {
+            val intent = Intent(this@ProfileActivity, AccountActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        // Sign out from the app
+        binding.actionSignOut.setOnClickListener {
+            this.auth.signOut()
+            val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+
+            Toast.makeText(
+                this@ProfileActivity,
+                "You logged out successfully.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

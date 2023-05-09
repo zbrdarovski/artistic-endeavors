@@ -78,7 +78,7 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
                             notifyItemRemoved(index)
                         }
 
-                        // Delete the post from Firestore in the background
+                        // Delete the post
                         val postRef = db.collection("posts").document(post.id!!)
                         postRef.delete()
                             .addOnSuccessListener {

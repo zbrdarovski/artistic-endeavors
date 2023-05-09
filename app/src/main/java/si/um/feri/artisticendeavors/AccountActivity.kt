@@ -112,9 +112,9 @@ class AccountActivity : AppCompatActivity() {
                 )
 
                 // Convert the Bitmap to ByteArray
-                val baos = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                val data = baos.toByteArray()
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                val data = byteArrayOutputStream.toByteArray()
 
                 // Upload the image to Firebase Storage
                 val uploadTask = imageRef.putBytes(data)
