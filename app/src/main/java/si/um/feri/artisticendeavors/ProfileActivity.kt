@@ -1,5 +1,6 @@
 package si.um.feri.artisticendeavors
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -57,8 +58,15 @@ class ProfileActivity : AppCompatActivity() {
                 imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
                 // Upload the image to Firebase Storage
+                val progressDialog = ProgressDialog(this)
+                progressDialog.setTitle("Uploading image")
+                progressDialog.setMessage("Please wait while the image is being uploaded.")
+                progressDialog.setCancelable(false)
+                progressDialog.show()
+
                 val uploadTask = imageRef.putBytes(data)
                 uploadTask.addOnSuccessListener {
+                    progressDialog.dismiss()
                     // Image uploaded successfully
                     imageRef.downloadUrl.addOnSuccessListener { uri ->
                         downloadUrl = uri.toString()
@@ -99,8 +107,13 @@ class ProfileActivity : AppCompatActivity() {
                         Timber.e(exception, "Error getting download URL")
                     }
                 }.addOnFailureListener { exception ->
+                    progressDialog.dismiss()
                     // Image upload failed
                     Timber.e(exception, "Image upload failed")
+                }.addOnProgressListener { taskSnapshot ->
+                    // Update the progress bar
+                    val progress = (100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
+                    progressDialog.setMessage("Uploaded $progress%")
                 }
             }
         }
