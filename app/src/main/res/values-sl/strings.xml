@@ -43,6 +43,6 @@
     <string name="please_enter_post_description">Vnesite opis objave</string>
     <string name="post_photo">Objavi fotografijo</string>
     <string name="no_posts">Na žalost trenutno ni objav za prikaz. :(</string>
-    <string name="no_posts_found">Ni objav.</string>
     <string name="delete_post">Izbriši objavo</string>
+    <string name="adding_new_post">Dodajanje nove objave:</string>
 </resources>

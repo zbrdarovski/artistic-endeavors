@@ -1,12 +1,12 @@
 package si.um.feri.artisticendeavors
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,83 +41,84 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var postText: String
 
     @RequiresApi(Build.VERSION_CODES.P)
-    val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val imageUri = result.data?.data
-            if (imageUri != null) {
-                // Convert image into Bitmap
-                val bitmap = ImageDecoder.decodeBitmap(
-                    ImageDecoder.createSource(contentResolver, imageUri)
-                )
+    val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val imageUri = result.data?.data
+                if (imageUri != null) {
+                    // Convert image into Bitmap
+                    val bitmap = ImageDecoder.decodeBitmap(
+                        ImageDecoder.createSource(contentResolver, imageUri)
+                    )
 
-                // Convert the Bitmap to ByteArray
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-                val data = byteArrayOutputStream.toByteArray()
+                    // Convert the Bitmap to ByteArray
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                    val data = byteArrayOutputStream.toByteArray()
 
-                imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
+                    imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
-                // Upload the image to Firebase Storage
-                val progressDialog = ProgressDialog(this)
-                progressDialog.setTitle("Uploading image")
-                progressDialog.setMessage("Please wait while the image is being uploaded.")
-                progressDialog.setCancelable(false)
-                progressDialog.show()
+                    // Upload the image to Firebase Storage
+                    binding.loadingPhoto.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.VISIBLE
 
-                val uploadTask = imageRef.putBytes(data)
-                uploadTask.addOnSuccessListener {
-                    progressDialog.dismiss()
-                    // Image uploaded successfully
-                    imageRef.downloadUrl.addOnSuccessListener { uri ->
-                        downloadUrl = uri.toString()
-                        Timber.d("Image uploaded successfully: $downloadUrl")
+                    val uploadTask = imageRef.putBytes(data)
+                    uploadTask.addOnSuccessListener {
+                        binding.loadingPhoto.visibility = View.GONE
+                        binding.progressBar.visibility = View.GONE
+                        // Image uploaded successfully
+                        imageRef.downloadUrl.addOnSuccessListener { uri ->
+                            downloadUrl = uri.toString()
+                            Timber.d("Image uploaded successfully: $downloadUrl")
 
-                        val currentUser = auth.currentUser
-                        // Create a new post object with the image URL
-                        val newPost = Post(
-                            user = currentUser?.displayName?.let { it1 -> User(username = it1) },
-                            description = postText,
-                            creation_time_milliseconds = System.currentTimeMillis(),
-                            image_url = downloadUrl
-                        )
+                            val currentUser = auth.currentUser
+                            // Create a new post object with the image URL
+                            val newPost = Post(
+                                user = currentUser?.displayName?.let { it1 -> User(username = it1) },
+                                description = postText,
+                                creation_time_milliseconds = System.currentTimeMillis(),
+                                image_url = downloadUrl
+                            )
 
-                        db.collection("posts")
-                            .add(newPost)
-                            .addOnSuccessListener { documentReference ->
-                                // Get the document ID and update the new post object with it
-                                val postId = documentReference.id
-                                newPost.id = postId
+                            db.collection("posts")
+                                .add(newPost)
+                                .addOnSuccessListener { documentReference ->
+                                    // Get the document ID and update the new post object with it
+                                    val postId = documentReference.id
+                                    newPost.id = postId
 
-                                // Update the post document with the generated ID
-                                db.collection("posts")
-                                    .document(postId)
-                                    .set(newPost)
-                                    .addOnSuccessListener {
-                                        // Log the document ID to verify that it was added correctly
-                                        Timber.d("DocumentSnapshot written with ID: $postId")
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Timber.e(e, "Error updating document")
-                                    }
-                            }
-                            .addOnFailureListener { e ->
-                                Timber.e(e, "Error adding document")
-                            }
+                                    // Update the post document with the generated ID
+                                    db.collection("posts")
+                                        .document(postId)
+                                        .set(newPost)
+                                        .addOnSuccessListener {
+                                            // Log the document ID to verify that it was added correctly
+                                            Timber.d("DocumentSnapshot written with ID: $postId")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Timber.e(e, "Error updating document")
+                                        }
+                                }
+                                .addOnFailureListener { e ->
+                                    Timber.e(e, "Error adding document")
+                                }
+                        }.addOnFailureListener { exception ->
+                            Timber.e(exception, "Error getting download URL")
+                        }
                     }.addOnFailureListener { exception ->
-                        Timber.e(exception, "Error getting download URL")
+                        binding.loadingPhoto.visibility = View.GONE
+                        binding.progressBar.visibility = View.GONE
+                        // Image upload failed
+                        Timber.e(exception, "Image upload failed")
+                    }.addOnProgressListener { taskSnapshot ->
+                        // Update the progress bar
+                        val progress =
+                            (100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
+                        binding.progressBar.progress = progress
                     }
-                }.addOnFailureListener { exception ->
-                    progressDialog.dismiss()
-                    // Image upload failed
-                    Timber.e(exception, "Image upload failed")
-                }.addOnProgressListener { taskSnapshot ->
-                    // Update the progress bar
-                    val progress = (100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
-                    progressDialog.setMessage("Uploaded $progress%")
                 }
             }
         }
-    }
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -168,7 +169,7 @@ class ProfileActivity : AppCompatActivity() {
         // Add new post
         binding.fabCreate.setOnClickListener {
             val builder = AlertDialog.Builder(this)
-            builder.setTitle("Add new post")
+            builder.setTitle("New post description:")
 
             // Set up the input
             val input = EditText(this)
