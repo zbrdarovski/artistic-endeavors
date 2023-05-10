@@ -1,5 +1,6 @@
 package si.um.feri.artisticendeavors
 
+import android.content.Intent
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -58,6 +59,13 @@ class MainPostAdapter(private val posts: List<Post>) :
                 }
             binding.tvRelativeTime.text =
                 post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
+
+            // Add this code to open the full-size image when the user clicks on it
+            binding.ivPost.setOnClickListener {
+                val intent = Intent(binding.root.context, MainActivity::class.java)
+                intent.putExtra("image_url", post.image_url)
+                binding.root.context.startActivity(intent)
+            }
         }
     }
 }

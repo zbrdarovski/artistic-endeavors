@@ -46,4 +46,5 @@
     <string name="delete_post">Izbriši objavo</string>
     <string name="adding_new_post">Dodajanje nove objave</string>
     <string name="edit_post">Uredi objavo</string>
+    <string name="zoomed_in">povečano</string>
 </resources>

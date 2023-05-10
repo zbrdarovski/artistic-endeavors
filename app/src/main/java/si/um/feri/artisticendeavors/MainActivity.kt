@@ -3,6 +3,8 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding
 import timber.log.Timber
 
@@ -61,6 +64,25 @@ class MainActivity : AppCompatActivity() {
                     notifyItemRangeInserted(0, posts.size)
                 }
             }
+        }
+
+        binding.zoomedIn.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                // Remove the listener to avoid unnecessary callbacks
+                binding.zoomedIn.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                binding.zoomedIn.visibility = View.VISIBLE
+                val imageUrl = intent.getStringExtra("image_url")
+                Picasso.get()
+                    .load(imageUrl)
+                    .into(binding.zoomedIn)
+            }
+        })
+
+        // Add a listener to the back button
+        binding.zoomedIn.setOnClickListener {
+            binding.zoomedIn.visibility = View.GONE
         }
 
         // Switch to MainActivity
