@@ -47,4 +47,6 @@
     <string name="adding_new_post">Adding new post</string>
     <string name="edit_post">Edit post</string>
     <string name="zoomed_in">zoomed in</string>
+    <string name="profile_image">Profile Image</string>
+    <string name="reset_password_label">Reset Password</string>
 </resources>

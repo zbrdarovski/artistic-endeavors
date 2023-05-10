@@ -3,6 +3,8 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -31,6 +33,27 @@ class LoginActivity : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
+        }
+
+        var startPass: Int
+        var endPass: Int
+
+        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
+            // checkbox status is changed from uncheck to checked.
+            if (!isChecked) {
+                // show password
+                startPass = binding.loginPassword.selectionStart
+                endPass = binding.loginPassword.selectionEnd
+                binding.loginPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.loginPassword.setSelection(startPass, endPass)
+            } else {
+                // hide password
+                startPass = binding.loginPassword.selectionStart
+                endPass = binding.loginPassword.selectionEnd
+                binding.loginPassword.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                binding.loginPassword.setSelection(startPass, endPass)
+            }
         }
 
         // Login to the app

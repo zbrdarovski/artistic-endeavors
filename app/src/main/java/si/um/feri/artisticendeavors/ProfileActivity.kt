@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,7 +22,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -196,26 +194,7 @@ class ProfileActivity : AppCompatActivity() {
             builder.show()
         }
 
-        binding.zoomedIn.viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                // Remove the listener to avoid unnecessary callbacks
-                binding.zoomedIn.viewTreeObserver.removeOnGlobalLayoutListener(this)
-
-                binding.zoomedIn.visibility = View.VISIBLE
-                val imageUrl = intent.getStringExtra("image_url")
-                Picasso.get()
-                    .load(imageUrl)
-                    .into(binding.zoomedIn)
-            }
-        })
-
-        // Add a listener to the back button
-        binding.zoomedIn.setOnClickListener {
-            binding.zoomedIn.visibility = View.GONE
-        }
-
-            // Switch to MainActivity
+        // Switch to MainActivity
         binding.homeOption.setOnClickListener {
             val intent = Intent(this@ProfileActivity, MainActivity::class.java)
             startActivity(intent)

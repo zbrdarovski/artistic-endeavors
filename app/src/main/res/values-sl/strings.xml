@@ -47,4 +47,6 @@
     <string name="adding_new_post">Dodajanje nove objave</string>
     <string name="edit_post">Uredi objavo</string>
     <string name="zoomed_in">povečano</string>
+    <string name="profile_image">Profilna Slika</string>
+    <string name="reset_password_label">Ponastavitev Gesla</string>
 </resources>

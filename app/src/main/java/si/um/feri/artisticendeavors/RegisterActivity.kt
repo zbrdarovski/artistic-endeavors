@@ -3,6 +3,8 @@ package si.um.feri.artisticendeavors
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -41,6 +43,48 @@ class RegisterActivity : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
+        }
+
+        var startPass: Int
+        var endPass: Int
+
+        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
+            // checkbox status is changed from uncheck to checked.
+            if (!isChecked) {
+                // show password
+                startPass = binding.password.selectionStart
+                endPass = binding.password.selectionEnd
+                binding.password.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.password.setSelection(startPass, endPass)
+            } else {
+                // hide password
+                startPass = binding.password.selectionStart
+                endPass = binding.password.selectionEnd
+                binding.password.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                binding.password.setSelection(startPass, endPass)
+            }
+        }
+
+        var startRepeat: Int
+        var endRepeat: Int
+
+        binding.showRepeatPass.setOnCheckedChangeListener { _, isChecked ->
+            // checkbox status is changed from uncheck to checked.
+            if (!isChecked) {
+                // show repeat
+                startRepeat = binding.repeat.selectionStart
+                endRepeat = binding.repeat.selectionEnd
+                binding.repeat.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.repeat.setSelection(startRepeat, endRepeat)
+            } else {
+                // hide repeat
+                startRepeat = binding.repeat.selectionStart
+                endRepeat = binding.repeat.selectionEnd
+                binding.repeat.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                binding.repeat.setSelection(startRepeat, endRepeat)
+            }
         }
 
         // Register a new user to Firebase

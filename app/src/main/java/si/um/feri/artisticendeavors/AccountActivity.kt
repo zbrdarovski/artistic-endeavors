@@ -5,11 +5,15 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
+import android.text.TextUtils
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -20,6 +24,7 @@ import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
+
 
 class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAccountBinding
@@ -134,6 +139,127 @@ class AccountActivity : AppCompatActivity() {
         // Call function to open gallery
         binding.change.setOnClickListener {
             galleryLauncher.launch("image/*")
+        }
+
+        var startPass: Int
+        var endPass: Int
+
+        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
+            // checkbox status is changed from uncheck to checked.
+            if (!isChecked) {
+                // show password
+                startPass = binding.password.selectionStart
+                endPass = binding.password.selectionEnd
+                binding.password.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.password.setSelection(startPass, endPass)
+            } else {
+                // hide password
+                startPass = binding.password.selectionStart
+                endPass = binding.password.selectionEnd
+                binding.password.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                binding.password.setSelection(startPass, endPass)
+            }
+        }
+
+        var startRepeat: Int
+        var endRepeat: Int
+
+        binding.showRepeatPass.setOnCheckedChangeListener { _, isChecked ->
+            // checkbox status is changed from uncheck to checked.
+            if (!isChecked) {
+                // show repeat
+                startRepeat = binding.repeat.selectionStart
+                endRepeat = binding.repeat.selectionEnd
+                binding.repeat.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.repeat.setSelection(startRepeat, endRepeat)
+            } else {
+                // hide repeat
+                startRepeat = binding.repeat.selectionStart
+                endRepeat = binding.repeat.selectionEnd
+                binding.repeat.transformationMethod =
+                    HideReturnsTransformationMethod.getInstance()
+                binding.repeat.setSelection(startRepeat, endRepeat)
+            }
+        }
+
+        // Reset password
+        binding.reset.setOnClickListener {
+            when {
+                // Check whether password's field is empty
+                TextUtils.isEmpty(binding.password.text.toString().trim { it <= ' ' }) -> {
+                    Toast.makeText(
+                        this@AccountActivity,
+                        "Please enter new password.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                // Check whether password repeat's field is empty
+                TextUtils.isEmpty(binding.repeat.text.toString().trim { it <= ' ' }) -> {
+                    Toast.makeText(
+                        this@AccountActivity,
+                        "Please repeat password.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                // Double check password
+                binding.password.text.toString() != binding.repeat.text.toString() -> {
+                    Toast.makeText(
+                        this@AccountActivity,
+                        "Passwords don't match.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                // If everything checks out, update password
+                else -> {
+                    val newPassword = binding.password.text.toString().trim { it <= ' ' }
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user != null) {
+                        // Re - authenticate the user with their current password
+                        val credential = EmailAuthProvider.getCredential(user.email!!, newPassword)
+                        user.reauthenticate(credential)
+                            .addOnCompleteListener { reAuthTask ->
+                                if (reAuthTask.isSuccessful) {
+                                    // Password matches, don't update
+                                    Toast.makeText(
+                                        this@AccountActivity,
+                                        "New password must be different from the old password.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    // Password doesn't match, update password
+                                    user.updatePassword(newPassword)
+                                        .addOnCompleteListener { updateTask ->
+                                            if (updateTask.isSuccessful) {
+                                                binding.password.text.clear()
+                                                binding.repeat.text.clear()
+                                                Toast.makeText(
+                                                    this@AccountActivity,
+                                                    "Password updated successfully!",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    this@AccountActivity,
+                                                    "Failed to update password.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        }
+                                }
+                            }
+                    } else {
+                        Toast.makeText(
+                            this@AccountActivity,
+                            "Failed to retrieve current user.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
         }
     }
 }
