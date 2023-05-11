@@ -44,7 +44,7 @@
     <string name="post_photo">Post photo</string>
     <string name="no_posts">Unfortunately, there are currently no posts to display. :(</string>
     <string name="delete_post">Delete post</string>
-    <string name="adding_new_post">Adding new post</string>
+    <string name="uploading_image">Uploading image, please be patient</string>
     <string name="edit_post">Edit post</string>
     <string name="zoomed_in">zoomed in</string>
     <string name="profile_image">Profile Image</string>

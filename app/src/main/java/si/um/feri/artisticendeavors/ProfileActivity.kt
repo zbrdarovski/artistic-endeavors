@@ -22,6 +22,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -39,6 +40,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var imageRef: StorageReference
     private var downloadUrl: String? = null
     private lateinit var postText: String
+
 
     @RequiresApi(Build.VERSION_CODES.P)
     val galleryLauncher =
@@ -59,58 +61,81 @@ class ProfileActivity : AppCompatActivity() {
                     imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
                     // Upload the image to Firebase Storage
-                    binding.backgroundView.visibility = View.VISIBLE
-                    binding.loadingPhoto.visibility = View.VISIBLE
-                    binding.progressBar.visibility = View.VISIBLE
+                    binding.progress.visibility = View.VISIBLE
 
                     val uploadTask = imageRef.putBytes(data)
                     uploadTask.addOnSuccessListener {
-                        binding.backgroundView.visibility = View.GONE
-                        binding.loadingPhoto.visibility = View.GONE
-                        binding.progressBar.visibility = View.GONE
+                        binding.progress.visibility = View.GONE
                         // Image uploaded successfully
                         imageRef.downloadUrl.addOnSuccessListener { uri ->
                             downloadUrl = uri.toString()
                             Timber.d("Image uploaded successfully: $downloadUrl")
 
-                            val currentUser = auth.currentUser
-                            // Create a new post object with the image URL
-                            val newPost = Post(
-                                user = currentUser?.displayName?.let { it1 -> User(username = it1) },
-                                description = postText,
-                                creation_time_milliseconds = System.currentTimeMillis(),
-                                image_url = downloadUrl
-                            )
+                            // Launch the dialog for adding a post description
+                            val builder = AlertDialog.Builder(this)
+                            builder.setTitle("New post description:")
 
-                            db.collection("posts")
-                                .add(newPost)
-                                .addOnSuccessListener { documentReference ->
-                                    // Get the document ID and update the new post object with it
-                                    val postId = documentReference.id
-                                    newPost.id = postId
+                            // Set up the input
+                            val input = EditText(this)
+                            input.inputType = InputType.TYPE_CLASS_TEXT
+                            builder.setView(input)
 
-                                    // Update the post document with the generated ID
+                            // Set up the buttons
+                            builder.setPositiveButton("Post") { _, _ ->
+                                postText = input.text.toString().trim()
+                                if (postText.isNotEmpty()) {
+                                    val currentUser = auth.currentUser
+                                    // Create a new post object with the image URL and description
+                                    val newPost = Post(
+                                        user = currentUser?.displayName?.let { it1 -> User(username = it1) },
+                                        description = postText,
+                                        creation_time_milliseconds = System.currentTimeMillis(),
+                                        image_url = downloadUrl
+                                    )
+
                                     db.collection("posts")
-                                        .document(postId)
-                                        .set(newPost)
-                                        .addOnSuccessListener {
-                                            // Log the document ID to verify that it was added correctly
-                                            Timber.d("DocumentSnapshot written with ID: $postId")
+                                        .add(newPost)
+                                        .addOnSuccessListener { documentReference ->
+                                            // Get the document ID and update the new post object with it
+                                            val postId = documentReference.id
+                                            newPost.id = postId
+
+                                            // Update the post document with the generated ID
+                                            db.collection("posts")
+                                                .document(postId)
+                                                .set(newPost)
+                                                .addOnSuccessListener {
+                                                    // Log the document ID to verify that it was added correctly
+                                                    Timber.d("DocumentSnapshot written with ID: $postId")
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    Timber.e(e, "Error updating document")
+                                                }
                                         }
                                         .addOnFailureListener { e ->
-                                            Timber.e(e, "Error updating document")
+                                            Timber.e(e, "Error adding document")
                                         }
                                 }
-                                .addOnFailureListener { e ->
-                                    Timber.e(e, "Error adding document")
-                                }
+                            }
+                            builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel()
+                                // Delete the file
+                                imageRef.delete()
+                                    .addOnSuccessListener {
+                                        // File deleted successfully
+                                        Timber.d("Image deleted successfully")
+                                    }
+                                    .addOnFailureListener {
+                                        // Uh-oh, an error occurred!
+                                        Timber.e("Error deleting image", it)
+                                    }
+                            }
+
+                            builder.show()
                         }.addOnFailureListener { exception ->
                             Timber.e(exception, "Error getting download URL")
                         }
                     }.addOnFailureListener { exception ->
-                        binding.backgroundView.visibility = View.GONE
-                        binding.loadingPhoto.visibility = View.GONE
-                        binding.progressBar.visibility = View.GONE
+                        binding.progress.visibility = View.GONE
                         // Image upload failed
                         Timber.e(exception, "Image upload failed")
                     }.addOnProgressListener { taskSnapshot ->
@@ -137,6 +162,22 @@ class ProfileActivity : AppCompatActivity() {
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
 
         val currentUsername = auth.currentUser?.displayName
+
+        binding.usern.text = currentUsername
+
+        val imRef = storageRef.child("images/${currentUsername}.jpg")
+
+        // Load profile image
+        imRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                // Use Picasso to load the image into the ImageView
+                Picasso.get().load(uri).into(binding.profpic)
+            }
+            .addOnFailureListener { exception ->
+                // Handle any errors that may occur
+                Timber.e("TAG", "Error downloading image: $exception")
+            }
+
 
         val postsReference = db.collection("posts").limit(20)
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
@@ -171,30 +212,13 @@ class ProfileActivity : AppCompatActivity() {
 
         // Add new post
         binding.fabCreate.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("New post description:")
-
-            // Set up the input
-            val input = EditText(this)
-            input.inputType = InputType.TYPE_CLASS_TEXT
-            builder.setView(input)
-
-            // Set up the buttons
-            builder.setPositiveButton("Post") { _, _ ->
-                postText = input.text.toString().trim()
-                if (postText.isNotEmpty()) {
-                    val currentUser = auth.currentUser
-                    if (currentUser != null) {
-                        // Launch the gallery
-                        val intent = Intent(Intent.ACTION_GET_CONTENT)
-                        intent.type = "image/*"
-                        galleryLauncher.launch(intent)
-                    }
-                }
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                // Launch the gallery
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.type = "image/*"
+                galleryLauncher.launch(intent)
             }
-            builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-
-            builder.show()
         }
 
         // Switch to MainActivity
