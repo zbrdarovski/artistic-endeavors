@@ -20,7 +20,7 @@
     <string name="logout">Log Out</string>
     <string name="app_name">Artistic Endeavors</string>
     <string name="reset_password">reset password</string>
-    <string name="delete_account">delete account</string>
+    <string name="delete_account">Delete Account</string>
     <string name="no_account">You don\'t have an account yet?</string>
     <string name="option_sign_up">Sign up!</string>
     <string name="action_sign_up">sign up</string>
@@ -51,4 +51,5 @@
     <string name="reset_password_label">Reset Password</string>
     <string name="close">Close</string>
     <string name="full_size_image">full size image</string>
+    <string name="delete">delete</string>
 </resources>

@@ -12,15 +12,22 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -38,6 +45,70 @@ class AccountActivity : AppCompatActivity() {
     private val storage = Firebase.storage
     private val storageRef = storage.reference
 
+    private suspend fun deleteUserData(currentUsername: String) {
+        val auth = FirebaseAuth.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
+        val storage = FirebaseStorage.getInstance()
+
+        // Delete user's posts and images
+        firestore.collection("posts")
+            .whereEqualTo("user.username", currentUsername)
+            .get().await()
+            .forEach { document ->
+                // Delete the post image
+                val imageUrl = document.getString("image_url")
+                if (imageUrl != null) {
+                    val imageRef = storage.getReferenceFromUrl(imageUrl)
+                    imageRef.delete().await()
+                }
+
+                // Delete the post document
+                document.reference.delete().await()
+            }
+
+        // Delete user's profile picture
+        val profilePicRef = storage.reference.child("images/$currentUsername.jpg")
+        profilePicRef.delete().await()
+
+        // Delete user's user document
+        firestore.collection("users")
+            .whereEqualTo("username", currentUsername)
+            .get().await()
+            .forEach { document ->
+                document.reference.delete().await()
+            }
+
+        // Delete user's account
+        auth.currentUser?.delete()?.await()
+    }
+
+    // Assuming this code is inside an Activity or Fragment
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun deleteUserAccount() {
+        val currentUsername = FirebaseAuth.getInstance().currentUser?.displayName
+
+        if (currentUsername != null) {
+            // Show a confirmation dialog to the user before proceeding
+            val confirmationDialog = AlertDialog.Builder(this)
+                .setTitle("Delete Account")
+                .setMessage("Are you sure you want to delete your account? This action cannot be undone.")
+                .setPositiveButton("Yes") { _, _ ->
+                    // Call the deleteUserData function and log the user out
+                    GlobalScope.launch(Dispatchers.IO) {
+                        deleteUserData(currentUsername)
+                        FirebaseAuth.getInstance().signOut()
+                        // Navigate to the login screen
+                        startActivity(Intent(this@AccountActivity, LoginActivity::class.java))
+                        finish()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .create()
+
+            confirmationDialog.show()
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +124,6 @@ class AccountActivity : AppCompatActivity() {
             .continueWith { userDocument ->
                 val user = userDocument.result?.toObject(User::class.java)
                 val username = user?.username
-                binding.usern.text = username
                 imageRef = storageRef.child("images/${username}.jpg")
 
                 // Load profile image
@@ -260,6 +330,11 @@ class AccountActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+
+        // Delete account
+        binding.delete.setOnClickListener {
+            deleteUserAccount()
         }
     }
 }
