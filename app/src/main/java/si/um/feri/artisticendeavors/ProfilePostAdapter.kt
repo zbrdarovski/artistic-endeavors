@@ -48,6 +48,13 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
             binding.tvDescription.text = post.description
             Picasso.get().load(post.image_url).into(binding.ivPost)
 
+            // Add this code to open the full-size image when the user clicks on it
+            binding.ivPost.setOnClickListener {
+                val intent = Intent(binding.root.context, FullSizeImageActivity::class.java)
+                intent.putExtra("image_url", post.image_url)
+                binding.root.context.startActivity(intent)
+            }
+
             db.collection("users").document(currentUserId!!)
                 .get()
                 .continueWith {
@@ -64,13 +71,6 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
                 }
             binding.tvRelativeTime.text =
                 post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
-
-            // Add this code to open the full-size image when the user clicks on it
-            binding.ivPost.setOnClickListener {
-                val intent = Intent(binding.root.context, ProfileActivity::class.java)
-                intent.putExtra("image_url", post.image_url)
-                binding.root.context.startActivity(intent)
-            }
         }
 
         fun setDeleteClickListener(post: Post) {
@@ -90,13 +90,24 @@ class ProfilePostAdapter(private val posts: MutableList<Post>) :
 
                         // Delete the post
                         val postRef = db.collection("posts").document(post.id!!)
-                        postRef.delete()
-                            .addOnSuccessListener {
-                                Timber.d("Post deleted successfully")
+                        postRef.get().addOnSuccessListener { documentSnapshot ->
+                            val p = documentSnapshot.toObject(Post::class.java)
+                            p?.image_url?.let { imageUrl ->
+                                val imageRef = Firebase.storage.getReferenceFromUrl(imageUrl)
+                                imageRef.delete().addOnSuccessListener {
+                                    Timber.d("Image deleted successfully")
+                                }.addOnFailureListener { e ->
+                                    Timber.w("Error deleting image", e)
+                                }
                             }
-                            .addOnFailureListener { e ->
-                                Timber.w("Error deleting post", e)
-                            }
+                            postRef.delete()
+                                .addOnSuccessListener {
+                                    Timber.d("Post deleted successfully")
+                                }
+                                .addOnFailureListener { e ->
+                                    Timber.w("Error deleting post", e)
+                                }
+                        }
                     }
                     .setNegativeButton("No") { dialog, _ ->
                         dialog.dismiss()

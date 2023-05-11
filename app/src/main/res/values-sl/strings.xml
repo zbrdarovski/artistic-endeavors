@@ -49,4 +49,6 @@
     <string name="zoomed_in">povečano</string>
     <string name="profile_image">Profilna Slika</string>
     <string name="reset_password_label">Ponastavitev Gesla</string>
+    <string name="close">Zaprite</string>
+    <string name="full_size_image">slika v polni velikosti</string>
 </resources>

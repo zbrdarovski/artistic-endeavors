@@ -43,6 +43,13 @@ class MainPostAdapter(private val posts: List<Post>) :
             val db = Firebase.firestore
             val currentUserId = user?.uid
 
+            // Add this code to open the full-size image when the user clicks on it
+            binding.ivPost.setOnClickListener {
+                val intent = Intent(binding.root.context, FullSizeImageActivity::class.java)
+                intent.putExtra("image_url", post.image_url)
+                binding.root.context.startActivity(intent)
+            }
+
             db.collection("users").document(currentUserId!!)
                 .get()
                 .continueWith {
@@ -59,13 +66,6 @@ class MainPostAdapter(private val posts: List<Post>) :
                 }
             binding.tvRelativeTime.text =
                 post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
-
-            // Add this code to open the full-size image when the user clicks on it
-            binding.ivPost.setOnClickListener {
-                val intent = Intent(binding.root.context, MainActivity::class.java)
-                intent.putExtra("image_url", post.image_url)
-                binding.root.context.startActivity(intent)
-            }
         }
     }
 }

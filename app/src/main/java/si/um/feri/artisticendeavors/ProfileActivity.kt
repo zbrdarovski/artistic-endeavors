@@ -59,11 +59,13 @@ class ProfileActivity : AppCompatActivity() {
                     imageRef = storageRef.child("images/${UUID.randomUUID()}.jpg")
 
                     // Upload the image to Firebase Storage
+                    binding.backgroundView.visibility = View.VISIBLE
                     binding.loadingPhoto.visibility = View.VISIBLE
                     binding.progressBar.visibility = View.VISIBLE
 
                     val uploadTask = imageRef.putBytes(data)
                     uploadTask.addOnSuccessListener {
+                        binding.backgroundView.visibility = View.GONE
                         binding.loadingPhoto.visibility = View.GONE
                         binding.progressBar.visibility = View.GONE
                         // Image uploaded successfully
@@ -106,6 +108,7 @@ class ProfileActivity : AppCompatActivity() {
                             Timber.e(exception, "Error getting download URL")
                         }
                     }.addOnFailureListener { exception ->
+                        binding.backgroundView.visibility = View.GONE
                         binding.loadingPhoto.visibility = View.GONE
                         binding.progressBar.visibility = View.GONE
                         // Image upload failed
