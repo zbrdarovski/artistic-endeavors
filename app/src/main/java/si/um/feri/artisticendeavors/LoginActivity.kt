@@ -44,7 +44,8 @@ class LoginActivity : AppCompatActivity() {
                 // show password
                 startPass = binding.loginPassword.selectionStart
                 endPass = binding.loginPassword.selectionEnd
-                binding.loginPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.loginPassword.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.loginPassword.setSelection(startPass, endPass)
             } else {
                 // hide password
@@ -88,23 +89,30 @@ class LoginActivity : AppCompatActivity() {
                     this.auth.signInWithEmailAndPassword(email, pass)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                Toast.makeText(
-                                    this@LoginActivity,
-                                    "You are logged in successfully.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                val user = this.auth.currentUser
+                                if (user != null && user.isEmailVerified) {
+                                    Toast.makeText(
+                                        this@LoginActivity,
+                                        "You are logged in successfully.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
 
-                                val intent =
-                                    Intent(this@LoginActivity, MainActivity::class.java)
-                                intent.flags =
-                                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                intent.putExtra(
-                                    "user_id",
-                                    this.auth.currentUser!!.uid
-                                )
-                                intent.putExtra("email_id", email)
-                                startActivity(intent)
-                                finish()
+                                    val intent =
+                                        Intent(this@LoginActivity, MainActivity::class.java)
+                                    intent.flags =
+                                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    intent.putExtra("user_id", user.uid)
+                                    intent.putExtra("email_id", email)
+                                    startActivity(intent)
+                                    finish()
+                                } else {
+                                    Toast.makeText(
+                                        this@LoginActivity,
+                                        "Please verify your email address.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    binding.actionLogin.isEnabled = true
+                                }
                             } else {
                                 Toast.makeText(
                                     this@LoginActivity,

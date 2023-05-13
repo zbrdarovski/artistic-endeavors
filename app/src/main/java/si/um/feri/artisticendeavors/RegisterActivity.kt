@@ -8,19 +8,89 @@ import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
+import com.google.firebase.firestore.FirebaseFirestore
 import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
 
 class RegisterActivity : AppCompatActivity() {
+
+    private fun registerUser() {
+        val email: String = binding.email.text.toString().trim { it <= ' ' }
+        val password: String = binding.password.text.toString().trim { it <= ' ' }
+        val username: String = binding.username.text.toString().trim { it <= ' ' }
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
+
+        // Check if username is taken
+        db.collection("users")
+            .whereEqualTo("username", username)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    // Username is taken
+                    Toast.makeText(this, "This username is already taken.", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Username is available
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener { authResult ->
+                            val firebaseUser = authResult.user
+                            firebaseUser?.sendEmailVerification()
+                                ?.addOnSuccessListener {
+                                    Toast.makeText(
+                                        this,
+                                        "Verification email sent to your inbox. Please verify your email before logging in.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    // Save the username as the user's display name
+                                    val profileUpdates = UserProfileChangeRequest.Builder()
+                                        .setDisplayName(username)
+                                        .build()
+                                    firebaseUser.updateProfile(profileUpdates)
+
+                                    // Create user with only the username
+                                    val newUser = hashMapOf(
+                                        "username" to username
+                                    )
+
+                                    // Add user to Firestore
+                                    db.collection("users")
+                                        .document(authResult.user!!.uid)
+                                        .set(newUser)
+                                        .addOnSuccessListener {
+                                            auth.signOut()
+
+                                            // Redirect to LoginActivity
+                                            val intent = Intent(this, LoginActivity::class.java)
+                                            startActivity(intent)
+                                            finish()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(
+                                                this,
+                                                "Error: ${e.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                }
+                                ?.addOnFailureListener { e ->
+                                    Toast.makeText(
+                                        this,
+                                        "Error: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     private lateinit var binding: ActivityRegisterBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -151,64 +221,7 @@ class RegisterActivity : AppCompatActivity() {
 
                 // If everything checks out register a new user
                 else -> {
-                    val em: String = binding.email.text.toString().trim { it <= ' ' }
-                    val pass: String = binding.password.text.toString().trim { it <= ' ' }
-                    val username: String = binding.username.text.toString().trim { it <= ' ' }
-                    val auth = FirebaseAuth.getInstance()
-                    auth.createUserWithEmailAndPassword(em, pass)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-
-                                val firebaseUser: FirebaseUser = task.result!!.user!!
-
-                                // Update the user's display name
-                                auth.currentUser?.let { user ->
-                                    val profileUpdates = UserProfileChangeRequest.Builder()
-                                        .setDisplayName(username)
-                                        .build()
-
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        try {
-                                            user.updateProfile(profileUpdates).await()
-                                            // Save username to Firestore collection 'users'
-                                            val db = Firebase.firestore
-                                            val userDocument =
-                                                db.collection("users").document(firebaseUser.uid)
-                                            userDocument.set(mapOf("username" to username))
-                                        } catch (e: Exception) {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(
-                                                    this@RegisterActivity,
-                                                    e.message,
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Toast.makeText(
-                                    this@RegisterActivity,
-                                    "You are registered successfully.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                                val intent =
-                                    Intent(this@RegisterActivity, LoginActivity::class.java)
-                                intent.flags =
-                                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                intent.putExtra("user_id", firebaseUser.uid)
-                                intent.putExtra("email_id", em)
-                                startActivity(intent)
-                                finish()
-                            } else {
-                                Toast.makeText(
-                                    this@RegisterActivity,
-                                    task.exception!!.message.toString(),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
+                    registerUser()
                 }
             }
         }
