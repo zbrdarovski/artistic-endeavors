@@ -52,4 +52,5 @@
     <string name="close">Zaprite</string>
     <string name="full_size_image">slika v polni velikosti</string>
     <string name="delete">brisanje</string>
+    <string name="resend_confirmation_email">Ponovno pošlji potrditveno e-pošto</string>
 </resources>

@@ -14,6 +14,69 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var auth: FirebaseAuth
 
+    private fun resendConfirmationEmail() {
+        when {
+            // Check email
+            TextUtils.isEmpty(binding.loginUsername.text.toString().trim { it <= ' ' }) -> {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Please enter email.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.actionLogin.isEnabled = true
+            }
+
+            // Check password
+            TextUtils.isEmpty(binding.loginPassword.text.toString().trim { it <= ' ' }) -> {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Please enter password.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.actionLogin.isEnabled = true
+            }
+
+            // If everything checks out sign in with email and password to Firebase
+            else -> {
+                val email: String = binding.loginUsername.text.toString().trim { it <= ' ' }
+                val pass: String = binding.loginPassword.text.toString().trim { it <= ' ' }
+
+                this.auth.signInWithEmailAndPassword(email, pass)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val user = task.result?.user
+                            user?.sendEmailVerification()
+                                ?.addOnCompleteListener { verificationTask ->
+                                    if (verificationTask.isSuccessful) {
+                                        // Verification email sent successfully
+                                        Toast.makeText(
+                                            this@LoginActivity,
+                                            "Verification email sent successfully.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        // Failed to send verification email
+                                        Toast.makeText(
+                                            this@LoginActivity,
+                                            "Failed to send verification email.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                        } else {
+                            Toast.makeText(
+                                this@LoginActivity,
+                                task.exception!!.message.toString(),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            binding.actionLogin.isEnabled = true
+                        }
+                        auth.signOut()
+                    }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -55,6 +118,10 @@ class LoginActivity : AppCompatActivity() {
                     HideReturnsTransformationMethod.getInstance()
                 binding.loginPassword.setSelection(startPass, endPass)
             }
+        }
+
+        binding.resend.setOnClickListener {
+            resendConfirmationEmail()
         }
 
         // Login to the app
