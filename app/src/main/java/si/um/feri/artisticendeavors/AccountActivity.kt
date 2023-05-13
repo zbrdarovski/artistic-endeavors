@@ -5,15 +5,19 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.text.style.ForegroundColorSpan
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -88,10 +92,22 @@ class AccountActivity : AppCompatActivity() {
         val currentUsername = FirebaseAuth.getInstance().currentUser?.displayName
 
         if (currentUsername != null) {
+            val blackColor = ContextCompat.getColor(this, R.color.black)
+            val redColor = ContextCompat.getColor(this, R.color.red)
+
+            val title = SpannableString("Delete Account").apply {
+                setSpan(ForegroundColorSpan(blackColor), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            val message = SpannableString("Are you sure you want to delete your account? This action cannot be undone.").apply {
+                setSpan(ForegroundColorSpan(redColor), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
             // Show a confirmation dialog to the user before proceeding
             val confirmationDialog = AlertDialog.Builder(this)
-                .setTitle("Delete Account")
-                .setMessage("Are you sure you want to delete your account? This action cannot be undone.")
+                .setTitle(title)
+                .setMessage(message)
+                .setCancelable(false)
                 .setPositiveButton("Yes") { _, _ ->
                     // Call the deleteUserData function and log the user out
                     GlobalScope.launch(Dispatchers.IO) {

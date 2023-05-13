@@ -40,7 +40,7 @@ class RegisterActivity : AppCompatActivity() {
                                     Toast.makeText(
                                         this,
                                         "Verification email sent to your inbox. Please verify your email before logging in.",
-                                        Toast.LENGTH_SHORT
+                                        Toast.LENGTH_LONG
                                     ).show()
 
                                     // Save the username as the user's display name

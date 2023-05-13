@@ -77,6 +77,42 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun resetPassword() {
+        when {
+            // Check email
+            TextUtils.isEmpty(binding.loginUsername.text.toString().trim { it <= ' ' }) -> {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Please enter email.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                binding.actionLogin.isEnabled = true
+            }
+
+            // If everything checks out sign in with email and password to Firebase
+            else -> {
+                val email: String = binding.loginUsername.text.toString().trim { it <= ' ' }
+                val auth = FirebaseAuth.getInstance()
+                auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(
+                                this,
+                                "Password reset email sent. Please check your inbox.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Error: ${task.exception?.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -122,6 +158,10 @@ class LoginActivity : AppCompatActivity() {
 
         binding.resend.setOnClickListener {
             resendConfirmationEmail()
+        }
+
+        binding.resetPassword.setOnClickListener {
+            resetPassword()
         }
 
         // Login to the app
