@@ -1,16 +1,18 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.activities
 
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
+import android.text.InputType
 import android.text.TextUtils
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.text.style.ForegroundColorSpan
+import android.view.Gravity
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,10 +34,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
-
 
 class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAccountBinding
@@ -49,13 +52,28 @@ class AccountActivity : AppCompatActivity() {
     private val storage = Firebase.storage
     private val storageRef = storage.reference
 
+    private val tag: String = "AccountActivity"
+
+    private fun loadProfileImage() {
+        // Load profile image
+        imageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                // Use Picasso to load the image into the ImageView
+                Picasso.get().load(uri).into(binding.profpic)
+            }
+            .addOnFailureListener { exception ->
+                // Handle any errors that may occur
+                Timber.e(tag, "Error downloading image: $exception")
+            }
+    }
+
     private suspend fun deleteUserData(currentUsername: String) {
         val auth = FirebaseAuth.getInstance()
-        val firestore = FirebaseFirestore.getInstance()
+        val fs = FirebaseFirestore.getInstance()
         val storage = FirebaseStorage.getInstance()
 
         // Delete user's posts and images
-        firestore.collection("posts")
+        fs.collection("posts")
             .whereEqualTo("user.username", currentUsername)
             .get().await()
             .forEach { document ->
@@ -72,10 +90,16 @@ class AccountActivity : AppCompatActivity() {
 
         // Delete user's profile picture
         val profilePicRef = storage.reference.child("images/$currentUsername.jpg")
-        profilePicRef.delete().await()
+
+        try {
+            profilePicRef.delete().await()
+        } catch (e: Exception) {
+            // Handle the exception (e.g., log the error, show a toast, etc.)
+            Timber.e(tag, "Failed to delete profile picture: ${e.message}")
+        }
 
         // Delete user's user document
-        firestore.collection("users")
+        fs.collection("users")
             .whereEqualTo("username", currentUsername)
             .get().await()
             .forEach { document ->
@@ -92,34 +116,91 @@ class AccountActivity : AppCompatActivity() {
         val currentUsername = FirebaseAuth.getInstance().currentUser?.displayName
 
         if (currentUsername != null) {
-            val blackColor = ContextCompat.getColor(this, R.color.black)
-            val redColor = ContextCompat.getColor(this, R.color.red)
-
-            val title = SpannableString("Delete Account").apply {
-                setSpan(ForegroundColorSpan(blackColor), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
-            val message = SpannableString("Are you sure you want to delete your account? This action cannot be undone.").apply {
-                setSpan(ForegroundColorSpan(redColor), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-
             // Show a confirmation dialog to the user before proceeding
+            val passwordPromptMessage = TextView(this)
+            passwordPromptMessage.text = getString(R.string.confirmation)
+            passwordPromptMessage.setTextColor(ContextCompat.getColor(this, R.color.red))
+            passwordPromptMessage.gravity = Gravity.CENTER
+
+            val passwordEditText = EditText(this)
+            passwordEditText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+
+            val passwordPromptLayout = LinearLayout(this)
+            passwordPromptLayout.orientation = LinearLayout.VERTICAL
+            passwordPromptLayout.addView(passwordPromptMessage)
+            passwordPromptLayout.addView(passwordEditText)
+
             val confirmationDialog = AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(message)
-                .setCancelable(false)
+                .setTitle("Delete Account")
                 .setPositiveButton("Yes") { _, _ ->
-                    // Call the deleteUserData function and log the user out
-                    GlobalScope.launch(Dispatchers.IO) {
-                        deleteUserData(currentUsername)
-                        FirebaseAuth.getInstance().signOut()
-                        // Navigate to the login screen
-                        startActivity(Intent(this@AccountActivity, LoginActivity::class.java))
-                        finish()
-                    }
+                    // Prompt the user to enter their password to confirm deletion
+                    val passwordPrompt = AlertDialog.Builder(this)
+                        .setTitle("Confirm Deletion")
+                        .setView(passwordPromptLayout)
+                        .setPositiveButton("Delete") { _, _ ->
+                            val password = passwordEditText.text.toString()
+                            if (password.isEmpty()) {
+                                Toast.makeText(
+                                    this,
+                                    "Current password is necessary to confirm termination of your account.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@setPositiveButton
+                            }
+                            // Verify the password before deleting the account
+                            val currentEmail = auth.currentUser?.email
+                            val credential =
+                                currentEmail?.let { EmailAuthProvider.getCredential(it, password) }
+                            val user = FirebaseAuth.getInstance().currentUser
+                            if (credential != null) {
+                                user?.reauthenticate(credential)?.addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        GlobalScope.launch(Dispatchers.IO) {
+                                            deleteUserData(currentUsername)
+                                            FirebaseAuth.getInstance().signOut()
+                                            // Navigate to the login screen
+                                            startActivity(
+                                                Intent(
+                                                    this@AccountActivity,
+                                                    LoginActivity::class.java
+                                                )
+                                            )
+                                            finish()
+
+                                            runOnUiThread {
+                                                Toast.makeText(
+                                                    this@AccountActivity,
+                                                    "Account terminated successfully.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(
+                                            this,
+                                            "Incorrect password. Account deletion cancelled.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .create()
+
+                    passwordPrompt.setView(passwordPromptLayout)
+                    passwordPrompt.show()
                 }
                 .setNegativeButton("Cancel", null)
                 .create()
+
+            val messageTextView = TextView(this)
+            messageTextView.text =
+                getString(R.string.deletion)
+            messageTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
+            messageTextView.gravity = Gravity.CENTER
+
+            confirmationDialog.setView(messageTextView)
 
             confirmationDialog.show()
         }
@@ -141,17 +222,7 @@ class AccountActivity : AppCompatActivity() {
                 val user = userDocument.result?.toObject(User::class.java)
                 val username = user?.username
                 imageRef = storageRef.child("images/${username}.jpg")
-
-                // Load profile image
-                imageRef.downloadUrl
-                    .addOnSuccessListener { uri ->
-                        // Use Picasso to load the image into the ImageView
-                        Picasso.get().load(uri).into(binding.profpic)
-                    }
-                    .addOnFailureListener { exception ->
-                        // Handle any errors that may occur
-                        Timber.e("TAG", "Error downloading image: $exception")
-                    }
+                loadProfileImage()
             }
 
         // Switch to MainActivity
@@ -212,12 +283,13 @@ class AccountActivity : AppCompatActivity() {
                 uploadTask.addOnSuccessListener { taskSnapshot ->
                     // Image uploaded successfully
                     val downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl.toString()
-                    Timber.d("Image uploaded successfully: $downloadUrl")
-                    val intent = Intent(this@AccountActivity, AccountActivity::class.java)
-                    startActivity(intent)
+                    Timber.d(tag, "Image uploaded successfully: $downloadUrl")
+
+                    // Update the photo in the app
+                    loadProfileImage()
                 }.addOnFailureListener { exception ->
                     // Image upload failed
-                    Timber.e("Image upload failed", exception)
+                    Timber.e(tag, "Image upload failed", exception)
                 }
             }
         }
@@ -301,49 +373,66 @@ class AccountActivity : AppCompatActivity() {
 
                 // If everything checks out, update password
                 else -> {
-                    val newPassword = binding.password.text.toString().trim { it <= ' ' }
-                    val user = FirebaseAuth.getInstance().currentUser
-                    if (user != null) {
-                        // Re - authenticate the user with their current password
-                        val credential = EmailAuthProvider.getCredential(user.email!!, newPassword)
-                        user.reauthenticate(credential)
-                            .addOnCompleteListener { reAuthTask ->
-                                if (reAuthTask.isSuccessful) {
-                                    // Password matches, don't update
-                                    Toast.makeText(
-                                        this@AccountActivity,
-                                        "New password must be different from the old password.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    // Password doesn't match, update password
-                                    user.updatePassword(newPassword)
-                                        .addOnCompleteListener { updateTask ->
-                                            if (updateTask.isSuccessful) {
-                                                binding.password.text.clear()
-                                                binding.repeat.text.clear()
-                                                Toast.makeText(
-                                                    this@AccountActivity,
-                                                    "Password updated successfully!",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            } else {
-                                                Toast.makeText(
-                                                    this@AccountActivity,
-                                                    "Failed to update password.",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("Enter current password")
+
+                    // Set up the input
+                    val input = EditText(this)
+                    input.inputType =
+                        InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                    builder.setView(input)
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK") { _, _ ->
+                        val currentPassword = input.text.toString().trim()
+                        val user = FirebaseAuth.getInstance().currentUser
+                        if (user != null) {
+                            // Re - authenticate the user with their current password
+                            val credential =
+                                EmailAuthProvider.getCredential(user.email!!, currentPassword)
+                            user.reauthenticate(credential)
+                                .addOnCompleteListener { reAuthTask ->
+                                    if (reAuthTask.isSuccessful) {
+                                        // Password matches, continue with updating password
+                                        val newPassword = binding.password.text.toString().trim()
+                                        user.updatePassword(newPassword)
+                                            .addOnCompleteListener { updateTask ->
+                                                if (updateTask.isSuccessful) {
+                                                    binding.password.text.clear()
+                                                    binding.repeat.text.clear()
+                                                    Toast.makeText(
+                                                        this@AccountActivity,
+                                                        "Password updated successfully!",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                } else {
+                                                    Toast.makeText(
+                                                        this@AccountActivity,
+                                                        "Failed to update password.",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
                                             }
-                                        }
+                                    } else {
+                                        // Password doesn't match, show error message
+                                        Toast.makeText(
+                                            this@AccountActivity,
+                                            "Current password is incorrect.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
                                 }
-                            }
-                    } else {
-                        Toast.makeText(
-                            this@AccountActivity,
-                            "Failed to retrieve current user.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        } else {
+                            Toast.makeText(
+                                this@AccountActivity,
+                                "Failed to retrieve current user.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
+                    builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+
+                    builder.show()
                 }
             }
         }

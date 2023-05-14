@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.activities
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -23,6 +23,9 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.adapters.ProfilePostAdapter
+import si.um.feri.artisticendeavors.data.Post
+import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -40,7 +43,7 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var imageRef: StorageReference
     private var downloadUrl: String? = null
     private lateinit var postText: String
-
+    private val tag: String = "ProfileActivity"
 
     @RequiresApi(Build.VERSION_CODES.P)
     val galleryLauncher =
@@ -69,7 +72,7 @@ class ProfileActivity : AppCompatActivity() {
                         // Image uploaded successfully
                         imageRef.downloadUrl.addOnSuccessListener { uri ->
                             downloadUrl = uri.toString()
-                            Timber.d("Image uploaded successfully: $downloadUrl")
+                            Timber.d(tag, "Image uploaded successfully: $downloadUrl")
 
                             // Launch the dialog for adding a post description
                             val builder = AlertDialog.Builder(this)
@@ -106,14 +109,14 @@ class ProfileActivity : AppCompatActivity() {
                                                 .set(newPost)
                                                 .addOnSuccessListener {
                                                     // Log the document ID to verify that it was added correctly
-                                                    Timber.d("DocumentSnapshot written with ID: $postId")
+                                                    Timber.d(tag, "DocumentSnapshot written with ID: $postId")
                                                 }
                                                 .addOnFailureListener { e ->
-                                                    Timber.e(e, "Error updating document")
+                                                    Timber.e(tag, "Error updating document: $e")
                                                 }
                                         }
                                         .addOnFailureListener { e ->
-                                            Timber.e(e, "Error adding document")
+                                            Timber.e(tag, "Error adding document: $e")
                                         }
                                 }
                             }
@@ -122,22 +125,22 @@ class ProfileActivity : AppCompatActivity() {
                                 imageRef.delete()
                                     .addOnSuccessListener {
                                         // File deleted successfully
-                                        Timber.d("Image deleted successfully")
+                                        Timber.d(tag,"Image deleted successfully")
                                     }
                                     .addOnFailureListener {
                                         // Uh-oh, an error occurred!
-                                        Timber.e("Error deleting image", it)
+                                        Timber.e(tag,"Error deleting image $it")
                                     }
                             }
 
                             builder.show()
                         }.addOnFailureListener { exception ->
-                            Timber.e(exception, "Error getting download URL")
+                            Timber.e(tag, "Error getting download URL $exception")
                         }
                     }.addOnFailureListener { exception ->
                         binding.progress.visibility = View.GONE
                         // Image upload failed
-                        Timber.e(exception, "Image upload failed")
+                        Timber.e(tag, "Image upload failed $exception")
                     }.addOnProgressListener { taskSnapshot ->
                         // Update the progress bar
                         val progress =
@@ -175,7 +178,7 @@ class ProfileActivity : AppCompatActivity() {
             }
             .addOnFailureListener { exception ->
                 // Handle any errors that may occur
-                Timber.e("TAG", "Error downloading image: $exception")
+                Timber.e(tag, "Error downloading image: $exception")
             }
 
 
@@ -183,7 +186,7 @@ class ProfileActivity : AppCompatActivity() {
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
         listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
             if (exception != null || snapshot == null) {
-                Timber.e(exception, exception?.message)
+                Timber.e(tag, exception?.message)
                 return@addSnapshotListener
             }
             val listOfPosts = snapshot.toObjects(Post::class.java)
@@ -195,12 +198,9 @@ class ProfileActivity : AppCompatActivity() {
                 }
             }
             if (listOfPosts.isEmpty()) {
-                Toast.makeText(
-                    this@ProfileActivity,
-                    "Unfortunately, there are currently no posts to display. :(",
-                    Toast.LENGTH_LONG
-                ).show()
+                binding.noPosts.visibility = View.VISIBLE
             } else {
+                binding.noPosts.visibility = View.GONE
                 posts.clear()
                 posts.addAll(listOfPosts)
                 adapter.apply {

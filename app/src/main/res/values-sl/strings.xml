@@ -42,7 +42,7 @@
     <string name="add_photo">Dodaj</string>
     <string name="please_enter_post_description">Vnesite opis objave</string>
     <string name="post_photo">Objavi fotografijo</string>
-    <string name="no_posts">Na žalost trenutno ni objav za prikaz. :(</string>
+    <string name="no_posts">Na žalost trenutno ni objav za prikaz :(</string>
     <string name="delete_post">Izbriši objavo</string>
     <string name="uploading_image">Nalaganje fotografije, prosimo za potrpežljivost</string>
     <string name="edit_post">Uredi objavo</string>
@@ -53,4 +53,6 @@
     <string name="full_size_image">slika v polni velikosti</string>
     <string name="delete">brisanje</string>
     <string name="resend_confirmation_email">Ponovno pošlji potrditveno e-pošto</string>
+    <string name="confirmation">Prosimo vnesite svoje geslo za potrditev izbrisa.</string>
+    <string name="deletion">Ali ste prepričani, da želite izbrisati svoj račun? Tega dejanja ni mogoče razveljaviti.</string>
 </resources>

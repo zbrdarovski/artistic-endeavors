@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.adapters
 
 import android.content.Intent
 import android.text.format.DateUtils
@@ -12,6 +12,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
+import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ProfileItemPostBinding
 import timber.log.Timber
 

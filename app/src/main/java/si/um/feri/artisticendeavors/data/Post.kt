@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.data
 
 data class Post(
     val creation_time_milliseconds: Long? = null,

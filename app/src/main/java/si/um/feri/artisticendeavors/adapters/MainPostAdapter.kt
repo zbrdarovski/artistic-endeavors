@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.adapters
 
 import android.content.Intent
 import android.text.format.DateUtils
@@ -10,6 +10,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
+import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.MainItemPostBinding
 import timber.log.Timber
 
@@ -50,20 +52,24 @@ class MainPostAdapter(private val posts: List<Post>) :
                 binding.root.context.startActivity(intent)
             }
 
-            db.collection("users").document(currentUserId!!)
-                .get()
-                .continueWith {
-                    val imageRef = storageRef.child("images/${username}.jpg")
-                    imageRef.downloadUrl
-                        .addOnSuccessListener { uri ->
-                            // Use Picasso to load the image into the ImageView
-                            Picasso.get().load(uri).into(binding.ivProfileImage)
-                        }
-                        .addOnFailureListener { exception ->
-                            // Handle any errors that may occur
-                            Timber.e("TAG", "Error downloading image: $exception")
-                        }
-                }
+            if (currentUserId != null) {
+                db.collection("users").document(currentUserId)
+                db.collection("users").document(currentUserId)
+                    .get()
+                    .continueWith {
+                        val imageRef = storageRef.child("images/${username}.jpg")
+                        imageRef.downloadUrl
+                            .addOnSuccessListener { uri ->
+                                // Use Picasso to load the image into the ImageView
+                                Picasso.get().load(uri).into(binding.ivProfileImage)
+                            }
+                            .addOnFailureListener { exception ->
+                                // Handle any errors that may occur
+                                Timber.e("TAG", "Error downloading image: $exception")
+                            }
+                    }
+            }
+
             binding.tvRelativeTime.text =
                 post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
         }

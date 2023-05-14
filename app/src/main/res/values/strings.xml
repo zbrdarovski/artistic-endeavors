@@ -42,7 +42,7 @@
     <string name="add_photo">Add</string>
     <string name="please_enter_post_description">Please enter post description</string>
     <string name="post_photo">Post photo</string>
-    <string name="no_posts">Unfortunately, there are currently no posts to display. :(</string>
+    <string name="no_posts">Unfortunately, there are currently no posts to display :(</string>
     <string name="delete_post">Delete post</string>
     <string name="uploading_image">Uploading image, please be patient</string>
     <string name="edit_post">Edit post</string>
@@ -53,4 +53,6 @@
     <string name="full_size_image">full size image</string>
     <string name="delete">delete</string>
     <string name="resend_confirmation_email">Resend confirmation email</string>
+    <string name="confirmation">Please enter your password to confirm deletion.</string>
+    <string name="deletion">Are you sure you want to delete your account? This action cannot be undone.</string>
 </resources>

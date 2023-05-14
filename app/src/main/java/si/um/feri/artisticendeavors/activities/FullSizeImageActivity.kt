@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

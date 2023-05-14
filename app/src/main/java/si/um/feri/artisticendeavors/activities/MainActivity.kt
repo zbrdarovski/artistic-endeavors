@@ -1,8 +1,9 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.activities
 
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,8 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import si.um.feri.artisticendeavors.adapters.MainPostAdapter
+import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding
 import timber.log.Timber
 
@@ -24,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var posts: MutableList<Post>
     private lateinit var adapter: MainPostAdapter
     private lateinit var listenerRegistration: ListenerRegistration
+    private val tag: String = "MainActivity"
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,17 +47,14 @@ class MainActivity : AppCompatActivity() {
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
         listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
             if (exception != null || snapshot == null) {
-                Timber.e(exception?.message)
+                Timber.e(tag, exception?.message)
                 return@addSnapshotListener
             }
             val listOfPosts = snapshot.toObjects(Post::class.java)
             if (listOfPosts.isEmpty()) {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Unfortunately, there are currently no posts to display. :(",
-                    Toast.LENGTH_LONG
-                ).show()
+                binding.noPosts.visibility = View.VISIBLE
             } else {
+                binding.noPosts.visibility = View.GONE
                 posts.clear()
                 posts.addAll(listOfPosts)
                 adapter.apply {
