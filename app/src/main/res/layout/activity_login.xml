@@ -70,13 +70,14 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/login_password" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/showPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@mipmap/ic_open"
+            android:contentDescription="@string/toggle_password_visibility"
             app:layout_constraintBottom_toBottomOf="@+id/login_password"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/login_password"
             app:layout_constraintTop_toTopOf="@+id/login_password" />
 

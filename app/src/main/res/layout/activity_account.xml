@@ -80,7 +80,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="16dp"
-            android:text="@string/delete_account"
+            android:text="@string/account_deletion"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -124,7 +124,7 @@
             android:layout_marginEnd="32dp"
             android:background="@drawable/custom_button"
             android:enabled="true"
-            android:text="@string/change_photo"
+            android:text="@string/change_image"
             android:textColor="@color/teal_700"
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"
@@ -138,8 +138,8 @@
             android:layout_marginStart="64dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="64dp"
-            android:autofillHints="@string/prompt_password"
-            android:hint="@string/prompt_password"
+            android:autofillHints="@string/new_password"
+            android:hint="@string/new_password"
             android:imeActionLabel="@string/action_sign_in"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
@@ -147,15 +147,16 @@
             android:selectAllOnFocus="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/resetPasswordLabel" />
+            app:layout_constraintTop_toBottomOf="@+id/changePasswordLabel" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/showPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@mipmap/ic_open"
+            android:contentDescription="@string/toggle_password_visibility"
             app:layout_constraintBottom_toBottomOf="@+id/password"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/password"
             app:layout_constraintTop_toTopOf="@+id/password" />
 
@@ -166,8 +167,8 @@
             android:layout_marginStart="64dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="64dp"
-            android:autofillHints="@string/prompt_password"
-            android:hint="@string/repeat_password"
+            android:autofillHints="@string/repeat_new_password"
+            android:hint="@string/repeat_new_password"
             android:imeActionLabel="@string/action_sign_in"
             android:imeOptions="actionDone"
             android:inputType="textPassword"
@@ -177,13 +178,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/password" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/showRepeatPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@mipmap/ic_open"
+            android:contentDescription="@string/toggle_password_visibility"
             app:layout_constraintBottom_toBottomOf="@+id/repeat"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/repeat"
             app:layout_constraintTop_toTopOf="@+id/repeat" />
 
@@ -196,7 +198,7 @@
             android:layout_marginEnd="16dp"
             android:background="@drawable/custom_button"
             android:enabled="true"
-            android:text="@string/reset_password"
+            android:text="@string/change_password"
             android:textColor="@color/teal_700"
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"
@@ -204,13 +206,13 @@
             app:layout_constraintTop_toBottomOf="@+id/repeat" />
 
         <TextView
-            android:id="@+id/resetPasswordLabel"
+            android:id="@+id/changePasswordLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="32dp"
-            android:text="@string/reset_password_label"
+            android:text="@string/account_security"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -226,7 +228,7 @@
             android:layout_marginEnd="16dp"
             android:background="@drawable/custom_button"
             android:enabled="true"
-            android:text="@string/delete"
+            android:text="@string/delete_account"
             android:textColor="@color/teal_700"
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"

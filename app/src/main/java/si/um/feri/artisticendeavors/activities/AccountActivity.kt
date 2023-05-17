@@ -5,13 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputType
 import android.text.TextUtils
+import android.text.TextWatcher
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.view.Gravity
+import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -54,17 +58,21 @@ class AccountActivity : AppCompatActivity() {
 
     private val tag: String = "AccountActivity"
 
+    // Function to check if the new password satisfies Firebase's criteria
+    private fun isPasswordValid(password: String): Boolean {
+        val passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*\\W).{8,}$"
+        return password.matches(passwordPattern.toRegex())
+    }
+
     private fun loadProfileImage() {
         // Load profile image
-        imageRef.downloadUrl
-            .addOnSuccessListener { uri ->
-                // Use Picasso to load the image into the ImageView
-                Picasso.get().load(uri).into(binding.profpic)
-            }
-            .addOnFailureListener { exception ->
-                // Handle any errors that may occur
-                Timber.e(tag, "Error downloading image: $exception")
-            }
+        imageRef.downloadUrl.addOnSuccessListener { uri ->
+            // Use Picasso to load the image into the ImageView
+            Picasso.get().load(uri).into(binding.profpic)
+        }.addOnFailureListener { exception ->
+            // Handle any errors that may occur
+            Timber.e(tag, "Error downloading image: $exception")
+        }
     }
 
     private suspend fun deleteUserData(currentUsername: String) {
@@ -73,9 +81,7 @@ class AccountActivity : AppCompatActivity() {
         val storage = FirebaseStorage.getInstance()
 
         // Delete user's posts and images
-        fs.collection("posts")
-            .whereEqualTo("user.username", currentUsername)
-            .get().await()
+        fs.collection("posts").whereEqualTo("user.username", currentUsername).get().await()
             .forEach { document ->
                 // Delete the post image
                 val imageUrl = document.getString("image_url")
@@ -99,9 +105,7 @@ class AccountActivity : AppCompatActivity() {
         }
 
         // Delete user's user document
-        fs.collection("users")
-            .whereEqualTo("username", currentUsername)
-            .get().await()
+        fs.collection("users").whereEqualTo("username", currentUsername).get().await()
             .forEach { document ->
                 document.reference.delete().await()
             }
@@ -116,33 +120,83 @@ class AccountActivity : AppCompatActivity() {
         val currentUsername = FirebaseAuth.getInstance().currentUser?.displayName
 
         if (currentUsername != null) {
-            // Show a confirmation dialog to the user before proceeding
-            val passwordPromptMessage = TextView(this)
-            passwordPromptMessage.text = getString(R.string.confirmation)
-            passwordPromptMessage.setTextColor(ContextCompat.getColor(this, R.color.red))
-            passwordPromptMessage.gravity = Gravity.CENTER
-
             val passwordEditText = EditText(this)
-            passwordEditText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            passwordEditText.inputType =
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            passwordEditText.hint = "Enter current password"
+
+            val showHideButton = Button(this)
+            showHideButton.text = getString(R.string.show)
+            showHideButton.setTextColor(ContextCompat.getColor(this, R.color.teal_700))
+            showHideButton.setBackgroundResource(R.drawable.custom_button)
+            showHideButton.backgroundTintList =
+                ContextCompat.getColorStateList(this, R.color.teal_200)
+            showHideButton.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END
+            }
+
+            var isCurrentPasswordVisible = false
+            var startCursor: Int
+            var endCursor: Int
+
+            showHideButton.setOnClickListener {
+                if (isCurrentPasswordVisible) {
+                    // Hide password
+                    // Preserve the cursor position after showing/hiding password
+                    startCursor = passwordEditText.selectionStart
+                    endCursor = passwordEditText.selectionEnd
+                    passwordEditText.transformationMethod =
+                        PasswordTransformationMethod.getInstance()
+                    passwordEditText.setSelection(startCursor, endCursor)
+                    showHideButton.text = getString(R.string.show)
+                    isCurrentPasswordVisible = !isCurrentPasswordVisible
+                } else {
+                    // Show password
+                    // Preserve the cursor position after showing/hiding password
+                    startCursor = passwordEditText.selectionStart
+                    endCursor = passwordEditText.selectionEnd
+                    passwordEditText.transformationMethod =
+                        HideReturnsTransformationMethod.getInstance()
+                    passwordEditText.setSelection(startCursor, endCursor)
+                    showHideButton.text = getString(R.string.hide)
+                    isCurrentPasswordVisible = !isCurrentPasswordVisible
+                }
+            }
 
             val passwordPromptLayout = LinearLayout(this)
-            passwordPromptLayout.orientation = LinearLayout.VERTICAL
-            passwordPromptLayout.addView(passwordPromptMessage)
-            passwordPromptLayout.addView(passwordEditText)
 
-            val confirmationDialog = AlertDialog.Builder(this)
-                .setTitle("Delete Account")
+            passwordPromptLayout.orientation = LinearLayout.HORIZONTAL
+
+            // Set layout parameters for the password layout
+            passwordPromptLayout.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            // Set layout parameters for the passwordEditText
+            val passwordEditTextParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            passwordEditTextParams.weight = 1.0f // Take up available space
+            passwordEditText.layoutParams = passwordEditTextParams
+
+            passwordPromptLayout.addView(passwordEditText)
+            passwordPromptLayout.addView(showHideButton)
+
+
+            val confirmationDialog = AlertDialog.Builder(this).setTitle("Delete Account")
                 .setPositiveButton("Yes") { _, _ ->
                     // Prompt the user to enter their password to confirm deletion
-                    val passwordPrompt = AlertDialog.Builder(this)
-                        .setTitle("Confirm Deletion")
-                        .setView(passwordPromptLayout)
-                        .setPositiveButton("Delete") { _, _ ->
+                    val passwordPrompt = AlertDialog.Builder(this).setTitle("Confirm Account Deletion")
+                        .setView(passwordPromptLayout).setPositiveButton("Delete") { _, _ ->
                             val password = passwordEditText.text.toString()
                             if (password.isEmpty()) {
                                 Toast.makeText(
                                     this,
-                                    "Current password is necessary to confirm termination of your account.",
+                                    "Please enter the current password to confirm account deletion.",
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 return@setPositiveButton
@@ -161,8 +215,7 @@ class AccountActivity : AppCompatActivity() {
                                             // Navigate to the login screen
                                             startActivity(
                                                 Intent(
-                                                    this@AccountActivity,
-                                                    LoginActivity::class.java
+                                                    this@AccountActivity, LoginActivity::class.java
                                                 )
                                             )
                                             finish()
@@ -170,7 +223,7 @@ class AccountActivity : AppCompatActivity() {
                                             runOnUiThread {
                                                 Toast.makeText(
                                                     this@AccountActivity,
-                                                    "Account terminated successfully.",
+                                                    "Account deleted successfully.",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }
@@ -184,21 +237,24 @@ class AccountActivity : AppCompatActivity() {
                                     }
                                 }
                             }
-                        }
-                        .setNegativeButton("Cancel", null)
-                        .create()
+                        }.setNegativeButton("Cancel", null).create()
 
                     passwordPrompt.setView(passwordPromptLayout)
                     passwordPrompt.show()
-                }
-                .setNegativeButton("Cancel", null)
-                .create()
+                }.setNegativeButton("Cancel", null).create()
 
             val messageTextView = TextView(this)
-            messageTextView.text =
-                getString(R.string.deletion)
+            messageTextView.text = getString(R.string.deletion)
             messageTextView.setTextColor(ContextCompat.getColor(this, R.color.red))
-            messageTextView.gravity = Gravity.CENTER
+            messageTextView.gravity = Gravity.CENTER_HORIZONTAL
+
+            // Set layout parameters for the messageTextView
+            val messageTextViewParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            messageTextViewParams.weight = 1.0f // Spread text equally across the parent layout
+            messageTextView.layoutParams = messageTextViewParams
 
             confirmationDialog.setView(messageTextView)
 
@@ -216,14 +272,12 @@ class AccountActivity : AppCompatActivity() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         val currentUserId = currentUser?.uid
 
-        db.collection("users").document(currentUserId!!)
-            .get()
-            .continueWith { userDocument ->
-                val user = userDocument.result?.toObject(User::class.java)
-                val username = user?.username
-                imageRef = storageRef.child("images/${username}.jpg")
-                loadProfileImage()
-            }
+        db.collection("users").document(currentUserId!!).get().continueWith { userDocument ->
+            val user = userDocument.result?.toObject(User::class.java)
+            val username = user?.username
+            imageRef = storageRef.child("images/${username}.jpg")
+            loadProfileImage()
+        }
 
         // Switch to MainActivity
         binding.homeOption.setOnClickListener {
@@ -254,9 +308,7 @@ class AccountActivity : AppCompatActivity() {
             finish()
 
             Toast.makeText(
-                this@AccountActivity,
-                "You logged out successfully.",
-                Toast.LENGTH_SHORT
+                this@AccountActivity, "You logged out successfully.", Toast.LENGTH_SHORT
             ).show()
         }
 
@@ -269,8 +321,7 @@ class AccountActivity : AppCompatActivity() {
             uri?.let { imageUri ->
                 // Convert image into Bitmap
                 val bitmap = ImageDecoder.decodeBitmap(
-                    ImageDecoder.createSource(contentResolver, imageUri),
-                    listener
+                    ImageDecoder.createSource(contentResolver, imageUri), listener
                 )
 
                 // Convert the Bitmap to ByteArray
@@ -299,142 +350,335 @@ class AccountActivity : AppCompatActivity() {
             galleryLauncher.launch("image/*")
         }
 
+        // Declare variables to keep track of password visibility state and text selection
+        var isPasswordVisible = false
         var startPass: Int
         var endPass: Int
 
-        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
-            // checkbox status is changed from uncheck to checked.
-            if (!isChecked) {
-                // show password
+        binding.showPass.setOnClickListener {
+            // Update the password visibility and image resource based on the current state
+            if (isPasswordVisible) {
+                // Show password
                 startPass = binding.password.selectionStart
                 endPass = binding.password.selectionEnd
                 binding.password.transformationMethod = PasswordTransformationMethod.getInstance()
                 binding.password.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_open)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             } else {
-                // hide password
+                // Hide password
                 startPass = binding.password.selectionStart
                 endPass = binding.password.selectionEnd
                 binding.password.transformationMethod =
                     HideReturnsTransformationMethod.getInstance()
                 binding.password.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_closed)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             }
         }
 
+        // Declare variables to keep track of password visibility state and text selection
+        var isRepeatVisible = false
         var startRepeat: Int
         var endRepeat: Int
 
-        binding.showRepeatPass.setOnCheckedChangeListener { _, isChecked ->
-            // checkbox status is changed from uncheck to checked.
-            if (!isChecked) {
-                // show repeat
+        binding.showRepeatPass.setOnClickListener {
+            // Update the password visibility and image resource based on the current state
+            if (isRepeatVisible) {
+                // Show password
                 startRepeat = binding.repeat.selectionStart
                 endRepeat = binding.repeat.selectionEnd
                 binding.repeat.transformationMethod = PasswordTransformationMethod.getInstance()
                 binding.repeat.setSelection(startRepeat, endRepeat)
+                binding.showRepeatPass.setImageResource(R.mipmap.ic_open)
+
+                // Toggle the password visibility state
+                isRepeatVisible = !isRepeatVisible
             } else {
-                // hide repeat
+                // Hide password
                 startRepeat = binding.repeat.selectionStart
                 endRepeat = binding.repeat.selectionEnd
-                binding.repeat.transformationMethod =
-                    HideReturnsTransformationMethod.getInstance()
+                binding.repeat.transformationMethod = HideReturnsTransformationMethod.getInstance()
                 binding.repeat.setSelection(startRepeat, endRepeat)
+                binding.showRepeatPass.setImageResource(R.mipmap.ic_closed)
+
+                // Toggle the password visibility state
+                isRepeatVisible = !isRepeatVisible
             }
         }
 
-        // Reset password
+        var tempCurr = ""
+        var tmpNew = ""
+
+        // Define the password requirements
+        val passwordRequirements = listOf(
+            "Password must be at least 8 characters long.",
+            "Password must contain at least one lowercase letter.",
+            "Password must contain at least one uppercase letter.",
+            "Password must contain at least one digit.",
+            "Password must contain at least one special character."
+        )
+
+        // Initialize the "Reset" button as disabled
+        binding.reset.isEnabled = false
+
+        // Add a TextWatcher to update the password requirements and enable/disable the reset button
+        binding.password.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No action needed
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                val newPassword = s?.toString()?.trim() ?: ""
+
+                // Filter the password requirements based on the new password
+                val unmetRequirements = passwordRequirements.filter { requirement ->
+                    when (requirement) {
+                        "Password must be at least 8 characters long." -> newPassword.length < 8
+
+                        "Password must contain at least one lowercase letter." -> !newPassword.any { it.isLowerCase() }
+
+                        "Password must contain at least one uppercase letter." -> !newPassword.any { it.isUpperCase() }
+
+                        "Password must contain at least one digit." -> !newPassword.any { it.isDigit() }
+
+                        "Password must contain at least one special character." -> !newPassword.any {
+                            it.isLetterOrDigit().not()
+                        }
+
+                        else -> false
+                    }
+                }
+
+                // Set the error message of binding.password based on the unmet requirements
+                val passwordError = if (unmetRequirements.isNotEmpty()) {
+                    unmetRequirements.joinToString("\n")
+                } else {
+                    null
+                }
+                binding.password.error = passwordError
+
+                // Check if the repeat password matches the password
+                val repeatPassword = binding.repeat.text.toString().trim()
+
+                // Enable or disable the reset button based on the password requirements and password match
+                binding.reset.isEnabled =
+                    isPasswordValid(newPassword) && newPassword == repeatPassword
+            }
+        })
+
+        // Add a TextWatcher to check if the repeat password matches the password
+        binding.repeat.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No action needed
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                val newPassword = binding.password.text.toString().trim()
+                val repeatPassword = s?.toString()?.trim() ?: ""
+
+                // Check if the repeat password matches the password
+                val isRepeatMatching = newPassword == repeatPassword
+
+                // Show/hide the password mismatch hint
+                if (repeatPassword.isNotEmpty() && !isRepeatMatching) {
+                    binding.repeat.error = "Passwords do not match"
+                } else {
+                    binding.repeat.error = null
+                }
+
+                // Enable or disable the reset button based on the password requirements and password match
+                binding.reset.isEnabled = isPasswordValid(newPassword) && isRepeatMatching
+            }
+        })
+
         binding.reset.setOnClickListener {
-            when {
-                // Check whether password's field is empty
-                TextUtils.isEmpty(binding.password.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@AccountActivity,
-                        "Please enter new password.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            val input = EditText(this)
+            input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            input.transformationMethod = PasswordTransformationMethod.getInstance()
+
+            // Set the value of the input variable to the stored value in temp
+            input.setText(tempCurr)
+            input.hint = "Enter current password"
+
+            // Add a TextWatcher to update the temp variable whenever the input text changes
+            input.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // No action needed
                 }
 
-                // Check whether password repeat's field is empty
-                TextUtils.isEmpty(binding.repeat.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@AccountActivity,
-                        "Please repeat password.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    // Update the temp variable with the new input text
+                    tempCurr = s?.toString() ?: ""
                 }
 
-                // Double check password
-                binding.password.text.toString() != binding.repeat.text.toString() -> {
+                override
+                fun afterTextChanged(s: Editable?) {
+                    // No action needed
+                }
+            })
+
+            val showHideButton = Button(this)
+            showHideButton.text = getString(R.string.show)
+            showHideButton.setTextColor(ContextCompat.getColor(this, R.color.teal_700))
+            showHideButton.setBackgroundResource(R.drawable.custom_button)
+            showHideButton.backgroundTintList =
+                ContextCompat.getColorStateList(this, R.color.teal_200)
+            showHideButton.layoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                addRule(RelativeLayout.ALIGN_PARENT_END)
+                addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+            }
+
+            var isCurrentPasswordVisible = false
+            var startCursor: Int
+            var endCursor: Int
+
+            showHideButton.setOnClickListener {
+                if (isCurrentPasswordVisible) {
+                    // Hide password
+                    // Preserve the cursor position after showing/hiding password
+                    startCursor = input.selectionStart
+                    endCursor = input.selectionEnd
+                    input.transformationMethod = PasswordTransformationMethod.getInstance()
+                    input.setSelection(startCursor, endCursor)
+                    showHideButton.text = getString(R.string.show)
+                    isCurrentPasswordVisible = !isCurrentPasswordVisible
+                } else {
+                    // Show password
+                    // Preserve the cursor position after showing/hiding password
+                    startCursor = input.selectionStart
+                    endCursor = input.selectionEnd
+                    input.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                    input.setSelection(startCursor, endCursor)
+                    showHideButton.text = getString(R.string.hide)
+                    isCurrentPasswordVisible = !isCurrentPasswordVisible
+                }
+            }
+
+            val layout = RelativeLayout(this)
+            layout.addView(input)
+            layout.addView(showHideButton)
+
+            val inputParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT
+            )
+            inputParams.addRule(RelativeLayout.ALIGN_PARENT_START)
+            inputParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT)
+            inputParams.addRule(RelativeLayout.LEFT_OF, showHideButton.id)
+            input.layoutParams = inputParams
+
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Confirm Password Change")
+            builder.setView(layout)
+
+            builder.setPositiveButton("CHANGE") { _, _ ->
+                val currentPasswordTemp = input.text.toString().trim()
+                if (TextUtils.isEmpty(currentPasswordTemp)) {
                     Toast.makeText(
                         this@AccountActivity,
-                        "Passwords don't match.",
+                        "Please enter the current password to confirm password change.",
                         Toast.LENGTH_SHORT
                     ).show()
+                    return@setPositiveButton
                 }
 
-                // If everything checks out, update password
-                else -> {
-                    val builder = AlertDialog.Builder(this)
-                    builder.setTitle("Enter current password")
+                tmpNew = binding.password.text.toString().trim()
 
-                    // Set up the input
-                    val input = EditText(this)
-                    input.inputType =
-                        InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                    builder.setView(input)
+                if (tempCurr == tmpNew) {
+                    Toast.makeText(
+                        this@AccountActivity,
+                        "Current password can't be same as the new password.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setPositiveButton
+                }
 
-                    // Set up the buttons
-                    builder.setPositiveButton("OK") { _, _ ->
-                        val currentPassword = input.text.toString().trim()
-                        val user = FirebaseAuth.getInstance().currentUser
-                        if (user != null) {
-                            // Re - authenticate the user with their current password
-                            val credential =
-                                EmailAuthProvider.getCredential(user.email!!, currentPassword)
-                            user.reauthenticate(credential)
-                                .addOnCompleteListener { reAuthTask ->
-                                    if (reAuthTask.isSuccessful) {
-                                        // Password matches, continue with updating password
-                                        val newPassword = binding.password.text.toString().trim()
-                                        user.updatePassword(newPassword)
-                                            .addOnCompleteListener { updateTask ->
-                                                if (updateTask.isSuccessful) {
-                                                    binding.password.text.clear()
-                                                    binding.repeat.text.clear()
-                                                    Toast.makeText(
-                                                        this@AccountActivity,
-                                                        "Password updated successfully!",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                } else {
-                                                    Toast.makeText(
-                                                        this@AccountActivity,
-                                                        "Failed to update password.",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
+                val user = FirebaseAuth.getInstance().currentUser
+                if (user != null) {
+                    // Re-authenticate the user with their current password
+                    val credential =
+                        EmailAuthProvider.getCredential(user.email!!, currentPasswordTemp)
+                    user.reauthenticate(credential).addOnCompleteListener { reAuthTask ->
+                        if (reAuthTask.isSuccessful) {
+                            // Password matches, continue with updating the password
+                            val newPassword = binding.password.text.toString().trim()
+                            val repeatPassword = binding.repeat.text.toString().trim()
+
+                            // Check if the new password satisfies Firebase's criteria
+                            if (isPasswordValid(newPassword)) {
+                                if (newPassword == repeatPassword) {
+                                    user
+                                        .updatePassword(newPassword)
+                                        .addOnCompleteListener { updateTask ->
+                                            if (updateTask.isSuccessful) {
+                                                Toast.makeText(
+                                                    this@AccountActivity,
+                                                    "Password updated successfully.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                binding.password.text.clear()
+                                                binding.repeat.text.clear()
+                                                tempCurr = ""
+                                                tmpNew = ""
+                                            } else {
+                                                Toast.makeText(
+                                                    this@AccountActivity,
+                                                    "Failed to update the password. Please try again.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
-                                    } else {
-                                        // Password doesn't match, show error message
-                                        Toast.makeText(
-                                            this@AccountActivity,
-                                            "Current password is incorrect.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
+                                        }
+                                } else {
+                                    Toast.makeText(
+                                        this@AccountActivity,
+                                        "Passwords do not match.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
+
+                            } else {
+                                Toast.makeText(
+                                    this@AccountActivity,
+                                    "New password must satisfy the criteria.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         } else {
                             Toast.makeText(
                                 this@AccountActivity,
-                                "Failed to retrieve current user.",
-                                Toast.LENGTH_LONG
+                                "Incorrect current password. Please try again.",
+                                Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
-                    builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-
-                    builder.show()
                 }
             }
+
+            builder.setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+            val dialog = builder.create()
+            dialog.show()
         }
 
         // Delete account

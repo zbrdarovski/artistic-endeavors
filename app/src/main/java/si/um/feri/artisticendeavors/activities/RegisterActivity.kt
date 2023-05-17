@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
 
@@ -29,7 +30,8 @@ class RegisterActivity : AppCompatActivity() {
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     // Username is taken
-                    Toast.makeText(this, "This username is already taken.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "This username is already taken.", Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     // Username is available
                     auth.createUserWithEmailAndPassword(email, password)
@@ -54,7 +56,7 @@ class RegisterActivity : AppCompatActivity() {
                                         "username" to username
                                     )
 
-                                    // Add user to Firestore
+                                    // Add user to Fs
                                     db.collection("users")
                                         .document(authResult.user!!.uid)
                                         .set(newUser)
@@ -115,51 +117,109 @@ class RegisterActivity : AppCompatActivity() {
             finish()
         }
 
+        // Declare variables to keep track of password visibility state and text selection
+        var isPasswordVisible = false
         var startPass: Int
         var endPass: Int
 
-        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
-            // checkbox status is changed from uncheck to checked.
-            if (!isChecked) {
-                // show password
+        binding.showPass.setOnClickListener {
+            // Update the password visibility and image resource based on the current state
+            if (isPasswordVisible) {
+                // Show password
                 startPass = binding.password.selectionStart
                 endPass = binding.password.selectionEnd
-                binding.password.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.password.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.password.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_open)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             } else {
-                // hide password
+                // Hide password
                 startPass = binding.password.selectionStart
                 endPass = binding.password.selectionEnd
                 binding.password.transformationMethod =
                     HideReturnsTransformationMethod.getInstance()
                 binding.password.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_closed)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             }
         }
 
-        var startRepeat: Int
-        var endRepeat: Int
+        // Declare variables to keep track of password visibility state and text selection
+        var isRepeatVisible = false
+        var startRepeat = 0
+        var endRepeat = 0
 
-        binding.showRepeatPass.setOnCheckedChangeListener { _, isChecked ->
-            // checkbox status is changed from uncheck to checked.
-            if (!isChecked) {
-                // show repeat
+        binding.showRepeatPass.setOnClickListener {
+            // Update the password visibility and image resource based on the current state
+            if (isRepeatVisible) {
+                // Show password
                 startRepeat = binding.repeat.selectionStart
                 endRepeat = binding.repeat.selectionEnd
-                binding.repeat.transformationMethod = PasswordTransformationMethod.getInstance()
+                binding.repeat.transformationMethod =
+                    PasswordTransformationMethod.getInstance()
                 binding.repeat.setSelection(startRepeat, endRepeat)
+                binding.showRepeatPass.setImageResource(R.mipmap.ic_open)
+
+                // Toggle the password visibility state
+                isRepeatVisible = !isRepeatVisible
             } else {
-                // hide repeat
+                // Hide password
                 startRepeat = binding.repeat.selectionStart
                 endRepeat = binding.repeat.selectionEnd
                 binding.repeat.transformationMethod =
                     HideReturnsTransformationMethod.getInstance()
                 binding.repeat.setSelection(startRepeat, endRepeat)
+                binding.showRepeatPass.setImageResource(R.mipmap.ic_closed)
+
+                // Toggle the password visibility state
+                isRepeatVisible = !isRepeatVisible
             }
         }
 
         // Register a new user to Firebase
         binding.actionRegister.setOnClickListener {
+            binding.actionRegister.isEnabled = false
+
+            val username = binding.username.text.toString().trim()
+
             when {
+                // Verify username with regex
+                !pattern.containsMatchIn(username) -> {
+                    val errorMessages = mutableListOf<String>()
+
+                    if (username.length < 8 || username.length > 20) {
+                        errorMessages.add("Username must be 8-20 characters long.")
+                    }
+
+                    if (!username.matches("[a-zA-Z0-9._]+".toRegex())) {
+                        errorMessages.add("Username can only contain alphanumeric characters, underscore, and dot.")
+                    }
+
+                    if (username.startsWith("_") || username.startsWith(".")) {
+                        errorMessages.add("Username cannot start with an underscore or dot.")
+                    }
+
+                    if (username.endsWith("_") || username.endsWith(".")) {
+                        errorMessages.add("Username cannot end with an underscore or dot.")
+                    }
+
+                    if (username.contains("..") || username.contains("__") || username.contains("._") || username.contains(
+                            "_."
+                        ) || username.contains("_.") || username.contains("._")
+                    ) {
+                        errorMessages.add("Username cannot have multiple underscores or dots in a row or have an underscore next to a dot.")
+                    }
+
+                    val errorMessage = errorMessages.joinToString(" ")
+                    Toast.makeText(this@RegisterActivity, errorMessage, Toast.LENGTH_LONG).show()
+                    binding.actionRegister.isEnabled = true
+                }
+
                 // Check whether email's field is empty
                 TextUtils.isEmpty(binding.email.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
@@ -167,6 +227,7 @@ class RegisterActivity : AppCompatActivity() {
                         "Please enter email.",
                         Toast.LENGTH_SHORT
                     ).show()
+                    binding.actionRegister.isEnabled = true
                 }
 
                 // Check whether username's field is empty
@@ -176,28 +237,18 @@ class RegisterActivity : AppCompatActivity() {
                         "Please enter username.",
                         Toast.LENGTH_SHORT
                     ).show()
-                }
-
-                // Verify username with regex
-                !pattern.containsMatchIn(binding.username.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Username is 8-20 characters long." +
-                                "Allowed characters: alphanumeric characters, underscore and dot." +
-                                "No underscore or dot at the end or the beginning." +
-                                "Underscore and dot can't be next to each other." +
-                                "Underscore or dot can't be used multiple times in a row.",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    binding.actionRegister.isEnabled = true
                 }
 
                 // Check whether password's field is empty
-                TextUtils.isEmpty(binding.password.text.toString().trim { it <= ' ' }) -> {
+                TextUtils.isEmpty(binding.password.text.toString()
+                    .trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@RegisterActivity,
                         "Please enter password.",
                         Toast.LENGTH_SHORT
                     ).show()
+                    binding.actionRegister.isEnabled = true
                 }
 
                 // Check whether password repeat's field is empty
@@ -207,6 +258,7 @@ class RegisterActivity : AppCompatActivity() {
                         "Please repeat password.",
                         Toast.LENGTH_SHORT
                     ).show()
+                    binding.actionRegister.isEnabled = true
                 }
 
                 // Double check password
@@ -216,8 +268,8 @@ class RegisterActivity : AppCompatActivity() {
                         "Passwords don't match.",
                         Toast.LENGTH_SHORT
                     ).show()
+                    binding.actionRegister.isEnabled = true
                 }
-
 
                 // If everything checks out register a new user
                 else -> {

@@ -19,8 +19,8 @@
     <string name="negative">ne</string>
     <string name="delete_acc_confirmation">"Želite zbrisati račun?"</string>
     <string name="logout">Izhod</string>
-    <string name="reset_password">ponastavi geslo</string>
-    <string name="delete_account">Izbriši Račun</string>
+    <string name="change_password">spremeni geslo</string>
+    <string name="account_deletion">IzbrisRačuna</string>
     <string name="no_account">Še nimate računa?</string>
     <string name="option_sign_up">Prijavi se!</string>
     <string name="action_sign_up">prijava</string>
@@ -29,7 +29,7 @@
     <string name="repeat_password">Ponovi geslo</string>
     <string name="username">Uporabniško ime</string>
     <string name="profile_picture">profilna slika</string>
-    <string name="change_photo">spremeni sliko</string>
+    <string name="change_image">spremeni sliko</string>
     <string name="artistic_endeavors">Artistic Endeavors</string>
     <string name="title_activity_account">AccountActivity</string>
     <string name="profile">PROFIL</string>
@@ -48,11 +48,16 @@
     <string name="edit_post">Uredi objavo</string>
     <string name="zoomed_in">povečano</string>
     <string name="profile_image">Profilna Slika</string>
-    <string name="reset_password_label">Ponastavitev Gesla</string>
+    <string name="account_security">Varnost Računa</string>
     <string name="close">Zaprite</string>
     <string name="full_size_image">slika v polni velikosti</string>
-    <string name="delete">brisanje</string>
+    <string name="delete_account">izbriši račun</string>
     <string name="resend_confirmation_email">Ponovno pošlji potrditveno e-pošto</string>
     <string name="confirmation">Prosimo vnesite svoje geslo za potrditev izbrisa.</string>
     <string name="deletion">Ali ste prepričani, da želite izbrisati svoj račun? Tega dejanja ni mogoče razveljaviti.</string>
+    <string name="toggle_password_visibility">Preklopi vidnost gesla</string>
+    <string name="show">Pokaži</string>
+    <string name="hide">Skrij</string>
+    <string name="new_password">Novo geslo</string>
+    <string name="repeat_new_password">Ponovite novo geslo</string>
 </resources>

@@ -66,13 +66,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/username" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/showPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@mipmap/ic_open"
+            android:contentDescription="@string/toggle_password_visibility"
             app:layout_constraintBottom_toBottomOf="@+id/password"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/password"
             app:layout_constraintTop_toTopOf="@+id/password" />
 
@@ -94,13 +95,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/password" />
 
-        <CheckBox
+        <ImageView
             android:id="@+id/showRepeatPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="8dp"
+            android:background="@mipmap/ic_open"
+            android:contentDescription="@string/toggle_password_visibility"
             app:layout_constraintBottom_toBottomOf="@+id/repeat"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/repeat"
             app:layout_constraintTop_toTopOf="@+id/repeat" />
 

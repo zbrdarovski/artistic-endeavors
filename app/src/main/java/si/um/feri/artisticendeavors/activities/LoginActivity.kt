@@ -8,6 +8,7 @@ import android.text.method.PasswordTransformationMethod
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
@@ -134,25 +135,35 @@ class LoginActivity : AppCompatActivity() {
             finish()
         }
 
-        var startPass: Int
-        var endPass: Int
+        // Declare variables to keep track of password visibility state and text selection
+        var isPasswordVisible = false
+        var startPass = 0
+        var endPass = 0
 
-        binding.showPass.setOnCheckedChangeListener { _, isChecked ->
-            // checkbox status is changed from uncheck to checked.
-            if (!isChecked) {
-                // show password
+        binding.showPass.setOnClickListener {
+            // Update the password visibility and image resource based on the current state
+            if (isPasswordVisible) {
+                // Show password
                 startPass = binding.loginPassword.selectionStart
                 endPass = binding.loginPassword.selectionEnd
                 binding.loginPassword.transformationMethod =
                     PasswordTransformationMethod.getInstance()
                 binding.loginPassword.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_open)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             } else {
-                // hide password
+                // Hide password
                 startPass = binding.loginPassword.selectionStart
                 endPass = binding.loginPassword.selectionEnd
                 binding.loginPassword.transformationMethod =
                     HideReturnsTransformationMethod.getInstance()
                 binding.loginPassword.setSelection(startPass, endPass)
+                binding.showPass.setImageResource(R.mipmap.ic_closed)
+
+                // Toggle the password visibility state
+                isPasswordVisible = !isPasswordVisible
             }
         }
 

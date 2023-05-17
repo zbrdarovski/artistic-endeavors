@@ -19,8 +19,8 @@
     <string name="delete_acc_confirmation">"Are you sure you want to delete your account?"</string>
     <string name="logout">Log Out</string>
     <string name="app_name">Artistic Endeavors</string>
-    <string name="reset_password">reset password</string>
-    <string name="delete_account">Delete Account</string>
+    <string name="change_password">change password</string>
+    <string name="account_deletion">Account Deletion</string>
     <string name="no_account">You don\'t have an account yet?</string>
     <string name="option_sign_up">Sign up!</string>
     <string name="action_sign_up">sign up</string>
@@ -29,7 +29,7 @@
     <string name="repeat_password">Repeat password</string>
     <string name="username">Username</string>
     <string name="profile_picture">profile picture</string>
-    <string name="change_photo">change photo</string>
+    <string name="change_image">change image</string>
     <string name="artistic_endeavors">Artistic Endeavors</string>
     <string name="title_activity_account">AccountActivity</string>
     <string name="profile">PROFILE</string>
@@ -48,11 +48,16 @@
     <string name="edit_post">Edit post</string>
     <string name="zoomed_in">zoomed in</string>
     <string name="profile_image">Profile Image</string>
-    <string name="reset_password_label">Reset Password</string>
+    <string name="account_security">Account Security</string>
     <string name="close">Close</string>
     <string name="full_size_image">full size image</string>
-    <string name="delete">delete</string>
+    <string name="delete_account">delete account</string>
     <string name="resend_confirmation_email">Resend confirmation email</string>
     <string name="confirmation">Please enter your password to confirm deletion.</string>
     <string name="deletion">Are you sure you want to delete your account? This action cannot be undone.</string>
+    <string name="toggle_password_visibility">Toggle password visibility</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
+    <string name="new_password">New password</string>
+    <string name="repeat_new_password">Repeat new password</string>
 </resources>
