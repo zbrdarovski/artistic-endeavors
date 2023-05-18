@@ -12,7 +12,6 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.EditText
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -27,7 +26,9 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.ActivitySwitcher
 import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.Toolbar
 import si.um.feri.artisticendeavors.adapters.ProfilePostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.data.User
@@ -48,7 +49,9 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var imageRef: StorageReference
     private var downloadUrl: String? = null
     private lateinit var postText: String
-    private val tag: String = getString(R.string.profile_activity)
+    private lateinit var tag: String
+    private lateinit var toolbar: Toolbar
+    private lateinit var activitySwitcher: ActivitySwitcher
 
     private fun color(text: String, colorHex: String): Spannable {
         val spannableString = SpannableString(text)
@@ -208,7 +211,16 @@ class ProfileActivity : AppCompatActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        tag = getString(R.string.profile_activity)
         db = Firebase.firestore
+        activitySwitcher = ActivitySwitcher()
+        toolbar = Toolbar(
+            this, auth, binding.includeToolbar.homeOption,
+            binding.includeToolbar.profileOption, binding.includeToolbar.accountOption,
+            binding.includeToolbar.actionSignOut
+        )
+        toolbar.bindToolbar()
+
         posts = mutableListOf()
         adapter = ProfilePostAdapter(this, posts)
 
@@ -272,41 +284,6 @@ class ProfileActivity : AppCompatActivity() {
                 intent.type = "image/*"
                 galleryLauncher.launch(intent)
             }
-        }
-
-        // Switch to MainActivity
-        binding.homeOption.setOnClickListener {
-            val intent = Intent(this@ProfileActivity, MainActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Switch to ProfileActivity
-        binding.profileOption.setOnClickListener {
-            val intent = Intent(this@ProfileActivity, ProfileActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Switch to AccountActivity
-        binding.accountOption.setOnClickListener {
-            val intent = Intent(this@ProfileActivity, AccountActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Sign out from the app
-        binding.actionSignOut.setOnClickListener {
-            this.auth.signOut()
-            val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-
-            Toast.makeText(
-                this@ProfileActivity,
-                getString(R.string.you_logged_out_successfully),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 

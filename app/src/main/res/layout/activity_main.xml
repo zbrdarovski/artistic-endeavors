@@ -16,79 +16,14 @@
         android:paddingBottom="@dimen/activity_vertical_margin"
         tools:context=".activities.MainActivity">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/main_toolbar"
-            android:layout_width="match_parent"
+        <include
+            android:id="@+id/includeToolbar"
+            layout="@layout/toolbar"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@color/teal_200"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="?attr/actionBarTheme"
-            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/home_option"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="@string/go_to_main_activity"
-            app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/profile_option"
-            app:layout_constraintTop_toTopOf="@+id/main_toolbar"
-            app:srcCompat="@mipmap/ic_home" />
-
-        <TextView
-            android:id="@+id/profile_option"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="@string/profile"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/account_option"
-            app:layout_constraintTop_toTopOf="@+id/main_toolbar" />
-
-        <TextView
-            android:id="@+id/account_option"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="@string/account"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintEnd_toStartOf="@+id/action_sign_out"
-            app:layout_constraintTop_toTopOf="@+id/main_toolbar" />
-
-        <ImageView
-            android:id="@+id/action_sign_out"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginEnd="32dp"
-            android:contentDescription="@string/log_out"
-            app:layout_constraintBottom_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintEnd_toEndOf="@+id/main_toolbar"
-            app:layout_constraintTop_toTopOf="@+id/main_toolbar"
-            app:srcCompat="@mipmap/ic_logout" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPosts"
-            android:layout_width="match_parent"
-            android:layout_height="600dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/main_toolbar"
-            app:layout_constraintVertical_bias="1.0"
-            tools:listitem="@layout/main_item_post" />
 
         <TextView
             android:id="@+id/noPosts"
@@ -101,7 +36,22 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/main_toolbar" />
+            app:layout_constraintTop_toBottomOf="@+id/includeToolbar" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPosts"
+            android:layout_width="match_parent"
+            android:layout_height="1000dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/includeToolbar"
+            app:layout_constraintVertical_bias="1.0"
+            tools:listitem="@layout/main_item_post" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

@@ -1,10 +1,8 @@
 package si.um.feri.artisticendeavors.activities
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,7 +12,9 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import si.um.feri.artisticendeavors.ActivitySwitcher
 import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.Toolbar
 import si.um.feri.artisticendeavors.adapters.MainPostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding
@@ -28,7 +28,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var posts: MutableList<Post>
     private lateinit var adapter: MainPostAdapter
     private lateinit var listenerRegistration: ListenerRegistration
-    private val tag: String = getString(R.string.main_activity)
+
+    private lateinit var tag: String
+    private lateinit var toolbar: Toolbar
+    private lateinit var activitySwitcher: ActivitySwitcher
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +39,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        tag = getString(R.string.main_activity)
         db = Firebase.firestore
+        activitySwitcher = ActivitySwitcher()
+        toolbar = Toolbar(
+            this, auth, binding.includeToolbar.homeOption,
+            binding.includeToolbar.profileOption, binding.includeToolbar.accountOption,
+            binding.includeToolbar.actionSignOut
+        )
+        toolbar.bindToolbar()
+
         posts = mutableListOf()
         adapter = MainPostAdapter(this, posts)
 
@@ -63,38 +75,6 @@ class MainActivity : AppCompatActivity() {
                     notifyItemRangeInserted(0, posts.size)
                 }
             }
-        }
-
-        // Switch to MainActivity
-        binding.homeOption.setOnClickListener {
-            val intent = Intent(this@MainActivity, MainActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Switch to ProfileActivity
-        binding.profileOption.setOnClickListener {
-            val intent = Intent(this@MainActivity, ProfileActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Switch to AccountActivity
-        binding.accountOption.setOnClickListener {
-            val intent = Intent(this@MainActivity, AccountActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Sign out from the app
-        binding.actionSignOut.setOnClickListener {
-            this.auth.signOut()
-            val intent = Intent(this@MainActivity, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-
-            Toast.makeText(
-                this@MainActivity,
-                getString(R.string.you_logged_out_successfully),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 

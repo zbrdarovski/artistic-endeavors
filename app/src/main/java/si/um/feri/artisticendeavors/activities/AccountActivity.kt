@@ -1,21 +1,14 @@
 package si.um.feri.artisticendeavors.activities
 
-import android.content.DialogInterface
-import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
-import android.text.Spannable
-import android.text.SpannableString
 import android.text.TextUtils
 import android.text.TextWatcher
-import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
-import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.widget.Button
 import android.widget.EditText
@@ -41,7 +34,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import si.um.feri.artisticendeavors.ActivitySwitcher
+import si.um.feri.artisticendeavors.Color
 import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.Toolbar
+import si.um.feri.artisticendeavors.Validator
+import si.um.feri.artisticendeavors.VisibilitySwitcher
 import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
@@ -59,20 +57,12 @@ class AccountActivity : AppCompatActivity() {
     private val storage = Firebase.storage
     private val storageRef = storage.reference
 
-    private val tag: String = getString(R.string.account_activity)
-
-    private fun color(text: String, colorHex: String): Spannable {
-        val spannableString = SpannableString(text)
-        val colorSpan = ForegroundColorSpan(Color.parseColor(colorHex))
-        spannableString.setSpan(colorSpan, 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        return spannableString
-    }
-
-    // Function to check if the new password satisfies Firebase's criteria
-    private fun isPasswordValid(password: String): Boolean {
-        val passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*\\W).{8,}$"
-        return password.matches(passwordPattern.toRegex())
-    }
+    private lateinit var tag: String
+    private lateinit var toolbar: Toolbar
+    private lateinit var activitySwitcher: ActivitySwitcher
+    private lateinit var validator: Validator
+    private lateinit var visibilitySwitcher: VisibilitySwitcher
+    private lateinit var color: Color
 
     private fun loadProfileImage() {
         // Load profile image
@@ -106,10 +96,10 @@ class AccountActivity : AppCompatActivity() {
             }
 
         // Delete user's profile picture
-        val profilePicRef = storage.reference.child("images/$currentUsername.jpg")
+        val profileImageReference = storage.reference.child("images/$currentUsername.jpg")
 
         try {
-            profilePicRef.delete().await()
+            profileImageReference.delete().await()
         } catch (e: Exception) {
             // Handle the exception (e.g., log the error, show a toast, etc.)
             val errorMessage = getString(R.string.failed_to_delete_profile_image, e)
@@ -149,33 +139,7 @@ class AccountActivity : AppCompatActivity() {
                 gravity = Gravity.END
             }
 
-            var isCurrentPasswordVisible = false
-            var startCursor: Int
-            var endCursor: Int
-
-            showHideButton.setOnClickListener {
-                if (isCurrentPasswordVisible) {
-                    // Hide password
-                    // Preserve the cursor position after showing/hiding password
-                    startCursor = passwordEditText.selectionStart
-                    endCursor = passwordEditText.selectionEnd
-                    passwordEditText.transformationMethod =
-                        PasswordTransformationMethod.getInstance()
-                    passwordEditText.setSelection(startCursor, endCursor)
-                    showHideButton.text = getString(R.string.show)
-                    isCurrentPasswordVisible = !isCurrentPasswordVisible
-                } else {
-                    // Show password
-                    // Preserve the cursor position after showing/hiding password
-                    startCursor = passwordEditText.selectionStart
-                    endCursor = passwordEditText.selectionEnd
-                    passwordEditText.transformationMethod =
-                        HideReturnsTransformationMethod.getInstance()
-                    passwordEditText.setSelection(startCursor, endCursor)
-                    showHideButton.text = getString(R.string.hide)
-                    isCurrentPasswordVisible = !isCurrentPasswordVisible
-                }
-            }
+            visibilitySwitcher.showPasswordWithButton(showHideButton, passwordEditText)
 
             val passwordPromptLayout = LinearLayout(this)
             passwordPromptLayout.orientation = LinearLayout.HORIZONTAL
@@ -195,9 +159,9 @@ class AccountActivity : AppCompatActivity() {
             passwordPromptLayout.addView(showHideButton)
 
             val passwordPrompt = AlertDialog.Builder(this)
-                .setTitle(color(getString(R.string.confirm_account_deletion), "#E36363"))
+                .setTitle(color.colorize(getString(R.string.confirm_account_deletion), "#E36363"))
                 .setView(passwordPromptLayout)
-                .setPositiveButton(color(getString(R.string.delete), "#E36363")) { _, _ ->
+                .setPositiveButton(color.colorize(getString(R.string.delete), "#E36363")) { _, _ ->
                     val password = passwordEditText.text.toString()
                     if (password.isEmpty()) {
                         Toast.makeText(
@@ -219,13 +183,10 @@ class AccountActivity : AppCompatActivity() {
                                     GlobalScope.launch(Dispatchers.IO) {
                                         deleteUserData(currentUsername)
                                         FirebaseAuth.getInstance().signOut()
-                                        startActivity(
-                                            Intent(
-                                                this@AccountActivity,
-                                                LoginActivity::class.java
-                                            )
+                                        activitySwitcher.startNewActivity(
+                                            this@AccountActivity,
+                                            LoginActivity::class.java
                                         )
-                                        finish()
 
                                         runOnUiThread {
                                             Toast.makeText(
@@ -245,7 +206,7 @@ class AccountActivity : AppCompatActivity() {
                             }
                     }
                 }
-                .setNegativeButton(color(getString(R.string.cancel), "#84B589"), null)
+                .setNegativeButton(color.colorize(getString(R.string.cancel), "#84B589"), null)
                 .create()
             passwordPrompt.show()
         }
@@ -256,7 +217,19 @@ class AccountActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        tag = getString(R.string.account_activity)
         db = Firebase.firestore
+        activitySwitcher = ActivitySwitcher()
+        toolbar = Toolbar(
+            this, auth, binding.includeToolbar.homeOption,
+            binding.includeToolbar.profileOption, binding.includeToolbar.accountOption,
+            binding.includeToolbar.actionSignOut
+        )
+        toolbar.bindToolbar()
+        validator = Validator(this)
+        visibilitySwitcher = VisibilitySwitcher(this)
+        color = Color()
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         val currentUserId = currentUser?.uid
@@ -266,39 +239,6 @@ class AccountActivity : AppCompatActivity() {
             val username = user?.username
             imageRef = storageRef.child("images/${username}.jpg")
             loadProfileImage()
-        }
-
-        // Switch to MainActivity
-        binding.homeOption.setOnClickListener {
-            val intent = Intent(this@AccountActivity, MainActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Switch to ProfileActivity
-        binding.profileOption.setOnClickListener {
-            val intent = Intent(this@AccountActivity, ProfileActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Switch to AccountActivity
-        binding.accountOption.setOnClickListener {
-            val intent = Intent(this@AccountActivity, AccountActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-
-        // Sign out from the app
-        binding.actionSignOut.setOnClickListener {
-            this.auth.signOut()
-            val intent = Intent(this@AccountActivity, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
-
-            Toast.makeText(
-                this@AccountActivity, getString(R.string.you_logged_out_successfully), Toast.LENGTH_SHORT
-            ).show()
         }
 
         val listener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
@@ -339,78 +279,12 @@ class AccountActivity : AppCompatActivity() {
             galleryLauncher.launch("image/*")
         }
 
-        // Declare variables to keep track of password visibility state and text selection
-        var isPasswordVisible = false
-        var startPass: Int
-        var endPass: Int
-
-        binding.showPass.setOnClickListener {
-            // Update the password visibility and image resource based on the current state
-            if (isPasswordVisible) {
-                // Show password
-                startPass = binding.password.selectionStart
-                endPass = binding.password.selectionEnd
-                binding.password.transformationMethod = PasswordTransformationMethod.getInstance()
-                binding.password.setSelection(startPass, endPass)
-                binding.showPass.setImageResource(R.mipmap.ic_open)
-
-                // Toggle the password visibility state
-                isPasswordVisible = !isPasswordVisible
-            } else {
-                // Hide password
-                startPass = binding.password.selectionStart
-                endPass = binding.password.selectionEnd
-                binding.password.transformationMethod =
-                    HideReturnsTransformationMethod.getInstance()
-                binding.password.setSelection(startPass, endPass)
-                binding.showPass.setImageResource(R.mipmap.ic_closed)
-
-                // Toggle the password visibility state
-                isPasswordVisible = !isPasswordVisible
-            }
-        }
-
-        // Declare variables to keep track of password visibility state and text selection
-        var isRepeatVisible = false
-        var startRepeat: Int
-        var endRepeat: Int
-
-        binding.showRepeatPass.setOnClickListener {
-            // Update the password visibility and image resource based on the current state
-            if (isRepeatVisible) {
-                // Show password
-                startRepeat = binding.repeat.selectionStart
-                endRepeat = binding.repeat.selectionEnd
-                binding.repeat.transformationMethod = PasswordTransformationMethod.getInstance()
-                binding.repeat.setSelection(startRepeat, endRepeat)
-                binding.showRepeatPass.setImageResource(R.mipmap.ic_open)
-
-                // Toggle the password visibility state
-                isRepeatVisible = !isRepeatVisible
-            } else {
-                // Hide password
-                startRepeat = binding.repeat.selectionStart
-                endRepeat = binding.repeat.selectionEnd
-                binding.repeat.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                binding.repeat.setSelection(startRepeat, endRepeat)
-                binding.showRepeatPass.setImageResource(R.mipmap.ic_closed)
-
-                // Toggle the password visibility state
-                isRepeatVisible = !isRepeatVisible
-            }
-        }
+        // Show/Hide password and repeat password
+        visibilitySwitcher.showPasswordWithImage(binding.showPass, binding.password)
+        visibilitySwitcher.showPasswordWithImage(binding.showRepeatPass, binding.repeat)
 
         var tempCurr = ""
         var tmpNew: String
-
-        // Define the password requirements
-        val passwordRequirements = listOf(
-            getString(R.string.password_must_be_at_least_eight_characters_long),
-            getString(R.string.password_must_contain_at_least_one_lowercase_letter),
-            getString(R.string.password_must_contain_at_least_one_uppercase_letter),
-            getString(R.string.password_must_contain_at_least_one_digit),
-            getString(R.string.password_must_contain_at_least_one_special_character)
-        )
 
         // Initialize the "Reset" button as disabled
         binding.reset.isEnabled = false
@@ -428,39 +302,13 @@ class AccountActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {
                 val newPassword = s?.toString()?.trim() ?: ""
 
-                // Filter the password requirements based on the new password
-                val unmetRequirements = passwordRequirements.filter { requirement ->
-                    when (requirement) {
-                        getString(R.string.password_must_be_at_least_eight_characters_long) -> newPassword.length < 8
-
-                        getString(R.string.password_must_contain_at_least_one_lowercase_letter) -> !newPassword.any { it.isLowerCase() }
-
-                        getString(R.string.password_must_contain_at_least_one_uppercase_letter)  -> !newPassword.any { it.isUpperCase() }
-
-                        getString(R.string.password_must_contain_at_least_one_digit)  -> !newPassword.any { it.isDigit() }
-
-                        getString(R.string.password_must_contain_at_least_one_special_character)  -> !newPassword.any {
-                            it.isLetterOrDigit().not()
-                        }
-
-                        else -> false
-                    }
-                }
-
-                // Set the error message of binding.password based on the unmet requirements
-                val passwordError = if (unmetRequirements.isNotEmpty()) {
-                    unmetRequirements.joinToString("\n")
-                } else {
-                    null
-                }
-                binding.password.error = passwordError
-
+                binding.password.error = validator.passwordErrorMessage(newPassword)
                 // Check if the repeat password matches the password
                 val repeatPassword = binding.repeat.text.toString().trim()
 
                 // Enable or disable the reset button based on the password requirements and password match
                 binding.reset.isEnabled =
-                    isPasswordValid(newPassword) && newPassword == repeatPassword
+                    validator.isPasswordValid(newPassword) && newPassword == repeatPassword
             }
         })
 
@@ -489,7 +337,7 @@ class AccountActivity : AppCompatActivity() {
                 }
 
                 // Enable or disable the reset button based on the password requirements and password match
-                binding.reset.isEnabled = isPasswordValid(newPassword) && isRepeatMatching
+                binding.reset.isEnabled = validator.isPasswordValid(newPassword) && isRepeatMatching
             }
         })
 
@@ -507,31 +355,7 @@ class AccountActivity : AppCompatActivity() {
             showHideButton.backgroundTintList =
                 ContextCompat.getColorStateList(this, R.color.teal_200)
 
-            var isCurrentPasswordVisible = false
-            var startCursor: Int
-            var endCursor: Int
-
-            showHideButton.setOnClickListener {
-                if (isCurrentPasswordVisible) {
-                    // Hide password
-                    // Preserve the cursor position after showing/hiding password
-                    startCursor = input.selectionStart
-                    endCursor = input.selectionEnd
-                    input.transformationMethod = PasswordTransformationMethod.getInstance()
-                    input.setSelection(startCursor, endCursor)
-                    showHideButton.text = getString(R.string.show)
-                    isCurrentPasswordVisible = !isCurrentPasswordVisible
-                } else {
-                    // Show password
-                    // Preserve the cursor position after showing/hiding password
-                    startCursor = input.selectionStart
-                    endCursor = input.selectionEnd
-                    input.transformationMethod = HideReturnsTransformationMethod.getInstance()
-                    input.setSelection(startCursor, endCursor)
-                    showHideButton.text = getString(R.string.hide)
-                    isCurrentPasswordVisible = !isCurrentPasswordVisible
-                }
-            }
+            visibilitySwitcher.showPasswordWithButton(showHideButton, input)
 
             val layout = LinearLayout(this)
             val layoutParams = LinearLayout.LayoutParams(
@@ -557,10 +381,15 @@ class AccountActivity : AppCompatActivity() {
             layout.addView(showHideButton)
 
             val builder = AlertDialog.Builder(this)
-            builder.setTitle(color(getString(R.string.confirm_password_change), "#E36363"))
+            builder.setTitle(color.colorize(getString(R.string.confirm_password_change), "#E36363"))
             builder.setView(layout)
 
-            builder.setPositiveButton(color(getString(R.string.change), "#E36363")) { _, _ ->
+            builder.setPositiveButton(
+                color.colorize(
+                    getString(R.string.change),
+                    "#E36363"
+                )
+            ) { _, _ ->
                 val currentPasswordTemp = input.text.toString().trim()
                 if (TextUtils.isEmpty(currentPasswordTemp)) {
                     Toast.makeText(
@@ -594,7 +423,7 @@ class AccountActivity : AppCompatActivity() {
                             val repeatPassword = binding.repeat.text.toString().trim()
 
                             // Check if the new password satisfies Firebase's criteria
-                            if (isPasswordValid(newPassword)) {
+                            if (validator.isPasswordValid(newPassword)) {
                                 if (newPassword == repeatPassword) {
                                     user.updatePassword(newPassword)
                                         .addOnCompleteListener { updateTask ->
@@ -641,13 +470,16 @@ class AccountActivity : AppCompatActivity() {
                 }
             }
 
-            builder.setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+            builder.setNegativeButton(
+                color.colorize(
+                    getString(R.string.cancel),
+                    "#84B589"
+                )
+            ) { dialog, _ ->
                 dialog.dismiss()
             }
 
             val dialog = builder.create()
-            dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
-                ?.setTextColor(Color.parseColor("#84B589"))
             dialog.show()
         }
 
