@@ -2,9 +2,11 @@ package si.um.feri.artisticendeavors.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
+import android.text.Editable
+import android.text.TextWatcher
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -13,8 +15,25 @@ import com.google.firebase.firestore.FirebaseFirestore
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
-
 class RegisterActivity : AppCompatActivity() {
+
+    // Validate the username
+    private fun isUsernameValid(username: String): Boolean {
+        val usernamePattern = "^[a-z0-9._]+$"
+        return username.length in 8..20 && username.matches(usernamePattern.toRegex()) &&
+                !username.startsWith("_") && !username.startsWith(".") &&
+                !username.endsWith("_") && !username.endsWith(".") &&
+                !username.contains("..") && !username.contains("__") &&
+                !username.contains("._") && !username.contains("_.") &&
+                !username.contains("_.") && !username.contains("._")
+    }
+
+
+    // Validate the password
+    private fun isPasswordValid(password: String): Boolean {
+        val passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*\\W).{8,}$"
+        return password.matches(passwordPattern.toRegex())
+    }
 
     private fun registerUser() {
         val email: String = binding.email.text.toString().trim { it <= ' ' }
@@ -30,7 +49,11 @@ class RegisterActivity : AppCompatActivity() {
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     // Username is taken
-                    Toast.makeText(this, "This username is already taken.", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.this_username_is_already_taken),
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 } else {
                     // Username is available
@@ -41,7 +64,7 @@ class RegisterActivity : AppCompatActivity() {
                                 ?.addOnSuccessListener {
                                     Toast.makeText(
                                         this,
-                                        "Verification email sent to your inbox. Please verify your email before logging in.",
+                                        getString(R.string.verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in),
                                         Toast.LENGTH_LONG
                                     ).show()
 
@@ -71,26 +94,30 @@ class RegisterActivity : AppCompatActivity() {
                                         .addOnFailureListener { e ->
                                             Toast.makeText(
                                                 this,
-                                                "Error: ${e.message}",
+                                                e.message,
                                                 Toast.LENGTH_SHORT
                                             ).show()
+                                            binding.actionRegister.isEnabled = true
                                         }
                                 }
                                 ?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         this,
-                                        "Error: ${e.message}",
+                                        e.message,
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    binding.actionRegister.isEnabled = true
                                 }
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+                            binding.actionRegister.isEnabled = true
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+                binding.actionRegister.isEnabled = true
             }
     }
 
@@ -100,14 +127,24 @@ class RegisterActivity : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        /* Regex to check the username:
-            1.) Username is 8-20 characters long.
-            2.) Allowed characters: alphanumeric characters, underscore and dot.
-            3.) No underscore or dot at the end or the beginning.
-            4.) Underscore and dot can't be next to each other.
-            5.) Underscore or dot can't be used multiple times in a row. */
+        // Define the username requirements
+        val usernameRequirements = listOf(
+            getString(R.string.username_must_be_eight_to_twenty_characters_long),
+            getString(R.string.username_can_only_contain_lowercase_letters_digits_underscores_and_dots),
+            getString(R.string.username_cannot_start_with_underscore_or_dot),
+            getString(R.string.username_cannot_end_with_underscore_or_dot),
+            getString(R.string.username_cannot_have_multiple_underscores_or_dots_in_a_row),
+            getString(R.string.username_cannot_have_underscore_next_to_dot)
+        )
 
-        val pattern = Regex("^(?=.{8,20}\$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])\$")
+        // Define the password requirements
+        val passwordRequirements = listOf(
+            getString(R.string.password_must_be_at_least_eight_characters_long),
+            getString(R.string.password_must_contain_at_least_one_lowercase_letter),
+            getString(R.string.password_must_contain_at_least_one_uppercase_letter),
+            getString(R.string.password_must_contain_at_least_one_digit),
+            getString(R.string.password_must_contain_at_least_one_special_character)
+        )
 
         // Switch from RegisterActivity to LoginActivity
         binding.option.setOnClickListener {
@@ -151,8 +188,8 @@ class RegisterActivity : AppCompatActivity() {
 
         // Declare variables to keep track of password visibility state and text selection
         var isRepeatVisible = false
-        var startRepeat = 0
-        var endRepeat = 0
+        var startRepeat: Int
+        var endRepeat: Int
 
         binding.showRepeatPass.setOnClickListener {
             // Update the password visibility and image resource based on the current state
@@ -181,100 +218,149 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        // Register a new user to Firebase
-        binding.actionRegister.setOnClickListener {
-            binding.actionRegister.isEnabled = false
+        // Add text change listeners to handle validations
+        binding.email.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // Validate email format
+                if (Patterns.EMAIL_ADDRESS.matcher(s.toString()).matches()) {
+                    binding.email.error = null
+                } else {
+                    binding.email.error = getString(R.string.invalid_email_format)
+                }
+            }
 
-            val username = binding.username.text.toString().trim()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-            when {
-                // Verify username with regex
-                !pattern.containsMatchIn(username) -> {
-                    val errorMessages = mutableListOf<String>()
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
 
-                    if (username.length < 8 || username.length > 20) {
-                        errorMessages.add("Username must be 8-20 characters long.")
-                    }
+        // Add a TextWatcher to update the username requirements
+        binding.username.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed
+            }
 
-                    if (!username.matches("[a-zA-Z0-9._]+".toRegex())) {
-                        errorMessages.add("Username can only contain alphanumeric characters, underscore, and dot.")
-                    }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No action needed
+            }
 
-                    if (username.startsWith("_") || username.startsWith(".")) {
-                        errorMessages.add("Username cannot start with an underscore or dot.")
-                    }
+            override fun afterTextChanged(s: Editable?) {
+                val username = s?.toString()?.trim() ?: ""
 
-                    if (username.endsWith("_") || username.endsWith(".")) {
-                        errorMessages.add("Username cannot end with an underscore or dot.")
-                    }
+                // Filter the username requirements based on the new username
+                val unmetRequirements = usernameRequirements.filter { requirement ->
+                    when (requirement) {
+                        getString(R.string.username_must_be_eight_to_twenty_characters_long) -> username.length !in 8..20
 
-                    if (username.contains("..") || username.contains("__") || username.contains("._") || username.contains(
+                        getString(R.string.username_can_only_contain_lowercase_letters_digits_underscores_and_dots) -> !username.matches(
+                            "^[a-z0-9._]+\$".toRegex()
+                        )
+
+                        getString(R.string.username_cannot_start_with_underscore_or_dot) -> username.startsWith(
+                            "_"
+                        ) || username.startsWith(".")
+
+                        getString(R.string.username_cannot_end_with_underscore_or_dot) -> username.endsWith(
+                            "_"
+                        ) || username.endsWith(".")
+
+                        getString(R.string.username_cannot_have_multiple_underscores_or_dots_in_a_row) -> username.contains(
+                            ".."
+                        ) || username.contains("__") || username.contains("._") || username.contains(
                             "_."
                         ) || username.contains("_.") || username.contains("._")
-                    ) {
-                        errorMessages.add("Username cannot have multiple underscores or dots in a row or have an underscore next to a dot.")
+
+                        getString(R.string.username_cannot_have_underscore_next_to_dot) -> username.contains(
+                            "_."
+                        ) || username.contains("._")
+
+                        else -> false
                     }
-
-                    val errorMessage = errorMessages.joinToString(" ")
-                    Toast.makeText(this@RegisterActivity, errorMessage, Toast.LENGTH_LONG).show()
-                    binding.actionRegister.isEnabled = true
                 }
 
-                // Check whether email's field is empty
-                TextUtils.isEmpty(binding.email.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Please enter email.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.actionRegister.isEnabled = true
+                // Set the error message of binding.username based on the unmet requirements
+                val usernameError = if (unmetRequirements.isNotEmpty()) {
+                    unmetRequirements.joinToString("\n")
+                } else {
+                    null
+                }
+                binding.username.error = usernameError
+            }
+        })
+
+        binding.password.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No action needed
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                val newPassword = s?.toString()?.trim() ?: ""
+
+                // Filter the password requirements based on the new password
+                val unmetRequirements = passwordRequirements.filter { requirement ->
+                    when (requirement) {
+                        getString(R.string.password_must_be_at_least_eight_characters_long) -> newPassword.length < 8
+
+                        getString(R.string.password_must_contain_at_least_one_lowercase_letter) -> !newPassword.any { it.isLowerCase() }
+
+                        getString(R.string.password_must_contain_at_least_one_uppercase_letter) -> !newPassword.any { it.isUpperCase() }
+
+                        getString(R.string.password_must_contain_at_least_one_digit) -> !newPassword.any { it.isDigit() }
+
+                        getString(R.string.password_must_contain_at_least_one_special_character) -> !newPassword.any {
+                            it.isLetterOrDigit().not()
+                        }
+
+                        else -> false
+                    }
                 }
 
-                // Check whether username's field is empty
-                TextUtils.isEmpty(binding.username.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Please enter username.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.actionRegister.isEnabled = true
+                // Set the error message of binding.password based on the unmet requirements
+                val passwordError = if (unmetRequirements.isNotEmpty()) {
+                    unmetRequirements.joinToString("\n")
+                } else {
+                    null
                 }
+                binding.password.error = passwordError
+            }
+        })
 
-                // Check whether password's field is empty
-                TextUtils.isEmpty(binding.password.text.toString()
-                    .trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Please enter password.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.actionRegister.isEnabled = true
-                }
+        binding.repeat.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed
+            }
 
-                // Check whether password repeat's field is empty
-                TextUtils.isEmpty(binding.repeat.text.toString().trim { it <= ' ' }) -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Please repeat password.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.actionRegister.isEnabled = true
-                }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // No action needed
+            }
 
-                // Double check password
-                binding.password.text.toString() != binding.repeat.text.toString() -> {
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Passwords don't match.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.actionRegister.isEnabled = true
-                }
+            override fun afterTextChanged(s: Editable?) {
+                val password = binding.password.text.toString()
+                val repeatPassword = binding.repeat.text.toString()
 
-                // If everything checks out register a new user
-                else -> {
-                    registerUser()
-                }
+                // Set the error message of binding.password based on the password match
+                binding.repeat.error =
+                    if (password == repeatPassword) null else getString(R.string.passwords_do_not_match)
+            }
+        })
+
+        // Register a new user to Firebase
+        // Register a new user to Firebase
+        binding.actionRegister.setOnClickListener {
+            val isEmailValid =
+                Patterns.EMAIL_ADDRESS.matcher(binding.email.text.toString()).matches()
+            val isUsernameValid = isUsernameValid(binding.username.text.toString())
+            val isPasswordValid = isPasswordValid(binding.password.text.toString())
+            val isPasswordsMatch =
+                binding.password.text.toString() == binding.repeat.text.toString()
+
+            if (isEmailValid && isUsernameValid && isPasswordValid && isPasswordsMatch) {
+                binding.actionRegister.isEnabled = false
+                registerUser()
             }
         }
     }

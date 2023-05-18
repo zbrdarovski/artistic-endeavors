@@ -2,10 +2,14 @@ package si.um.feri.artisticendeavors.activities
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -23,6 +27,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.adapters.ProfilePostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.data.User
@@ -43,7 +48,14 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var imageRef: StorageReference
     private var downloadUrl: String? = null
     private lateinit var postText: String
-    private val tag: String = "ProfileActivity"
+    private val tag: String = getString(R.string.profile_activity)
+
+    private fun color(text: String, colorHex: String): Spannable {
+        val spannableString = SpannableString(text)
+        val colorSpan = ForegroundColorSpan(Color.parseColor(colorHex))
+        spannableString.setSpan(colorSpan, 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return spannableString
+    }
 
     @RequiresApi(Build.VERSION_CODES.P)
     val galleryLauncher =
@@ -72,11 +84,18 @@ class ProfileActivity : AppCompatActivity() {
                         // Image uploaded successfully
                         imageRef.downloadUrl.addOnSuccessListener { uri ->
                             downloadUrl = uri.toString()
-                            Timber.d(tag, "Image uploaded successfully: $downloadUrl")
+                            val message =
+                                getString(R.string.image_uploaded_successfully, downloadUrl)
+                            Timber.d(tag, message)
 
                             // Launch the dialog for adding a post description
                             val builder = AlertDialog.Builder(this)
-                            builder.setTitle("New post description:")
+                            builder.setTitle(
+                                color(
+                                    getString(R.string.new_post_description),
+                                    "#E36363"
+                                )
+                            )
 
                             // Set up the input
                             val input = EditText(this)
@@ -84,7 +103,12 @@ class ProfileActivity : AppCompatActivity() {
                             builder.setView(input)
 
                             // Set up the buttons
-                            builder.setPositiveButton("Post") { _, _ ->
+                            builder.setPositiveButton(
+                                color(
+                                    getString(R.string.save),
+                                    "#E36363"
+                                )
+                            ) { _, _ ->
                                 postText = input.text.toString().trim()
                                 if (postText.isNotEmpty()) {
                                     val currentUser = auth.currentUser
@@ -109,38 +133,65 @@ class ProfileActivity : AppCompatActivity() {
                                                 .set(newPost)
                                                 .addOnSuccessListener {
                                                     // Log the document ID to verify that it was added correctly
-                                                    Timber.d(tag, "DocumentSnapshot written with ID: $postId")
+                                                    val errorMessage =
+                                                        getString(
+                                                            R.string.document_snapshot_written_with_id,
+                                                            postId
+                                                        )
+                                                    Timber.d(tag, errorMessage)
                                                 }
                                                 .addOnFailureListener { e ->
-                                                    Timber.e(tag, "Error updating document: $e")
+
+                                                    val errorMessage =
+                                                        getString(
+                                                            R.string.error_updating_document,
+                                                            e
+                                                        )
+                                                    Timber.e(tag, errorMessage)
                                                 }
                                         }
                                         .addOnFailureListener { e ->
-                                            Timber.e(tag, "Error adding document: $e")
+                                            val errorMessage =
+                                                getString(R.string.error_adding_document, e)
+                                            Timber.e(tag, errorMessage)
                                         }
                                 }
                             }
-                            builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel()
-                                // Delete the file
-                                imageRef.delete()
-                                    .addOnSuccessListener {
-                                        // File deleted successfully
-                                        Timber.d(tag,"Image deleted successfully")
-                                    }
-                                    .addOnFailureListener {
-                                        // Uh-oh, an error occurred!
-                                        Timber.e(tag,"Error deleting image $it")
-                                    }
-                            }
+                                .setNegativeButton(
+                                    color(
+                                        getString(R.string.cancel),
+                                        "#84B589"
+                                    )
+                                ) { dialog, _ ->
+                                    dialog.cancel()
+                                    // Delete the file
+                                    imageRef.delete()
+                                        .addOnSuccessListener {
+                                            // File deleted successfully
+                                            val errorMessage =
+                                                getString(R.string.image_deleted_successfully)
+                                            Timber.d(tag, errorMessage)
+                                        }
+                                        .addOnFailureListener {
+                                            // Uh-oh, an error occurred!
+                                            val errorMessage =
+                                                getString(R.string.error_deleting_image, it)
+                                            Timber.d(tag, errorMessage)
+                                        }
+                                }
 
                             builder.show()
                         }.addOnFailureListener { exception ->
-                            Timber.e(tag, "Error getting download URL $exception")
+                            val errorMessage =
+                                getString(R.string.error_getting_download_url, exception)
+                            Timber.e(tag, errorMessage)
                         }
                     }.addOnFailureListener { exception ->
                         binding.progress.visibility = View.GONE
                         // Image upload failed
-                        Timber.e(tag, "Image upload failed $exception")
+                        val errorMessage =
+                            getString(R.string.image_upload_failed, exception)
+                        Timber.e(tag, errorMessage)
                     }.addOnProgressListener { taskSnapshot ->
                         // Update the progress bar
                         val progress =
@@ -159,7 +210,7 @@ class ProfileActivity : AppCompatActivity() {
 
         db = Firebase.firestore
         posts = mutableListOf()
-        adapter = ProfilePostAdapter(posts)
+        adapter = ProfilePostAdapter(this, posts)
 
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
@@ -178,7 +229,9 @@ class ProfileActivity : AppCompatActivity() {
             }
             .addOnFailureListener { exception ->
                 // Handle any errors that may occur
-                Timber.e(tag, "Error downloading image: $exception")
+                val errorMessage =
+                    getString(R.string.error_downloading_image, exception)
+                Timber.e(tag, errorMessage)
             }
 
 
@@ -251,7 +304,7 @@ class ProfileActivity : AppCompatActivity() {
 
             Toast.makeText(
                 this@ProfileActivity,
-                "You logged out successfully.",
+                getString(R.string.you_logged_out_successfully),
                 Toast.LENGTH_SHORT
             ).show()
         }

@@ -21,7 +21,7 @@ class LoginActivity : AppCompatActivity() {
             TextUtils.isEmpty(binding.loginUsername.text.toString().trim { it <= ' ' }) -> {
                 Toast.makeText(
                     this@LoginActivity,
-                    "Please enter email.",
+                    getString(R.string.please_enter_email),
                     Toast.LENGTH_SHORT
                 ).show()
                 binding.actionLogin.isEnabled = true
@@ -31,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
             TextUtils.isEmpty(binding.loginPassword.text.toString().trim { it <= ' ' }) -> {
                 Toast.makeText(
                     this@LoginActivity,
-                    "Please enter password.",
+                    getString(R.string.please_enter_password),
                     Toast.LENGTH_SHORT
                 ).show()
                 binding.actionLogin.isEnabled = true
@@ -52,14 +52,14 @@ class LoginActivity : AppCompatActivity() {
                                         // Verification email sent successfully
                                         Toast.makeText(
                                             this@LoginActivity,
-                                            "Verification email sent successfully.",
+                                            getString(R.string.verification_email_sent_successfully),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
                                         // Failed to send verification email
                                         Toast.makeText(
                                             this@LoginActivity,
-                                            "Failed to send verification email.",
+                                            getString(R.string.failed_to_send_verification_email),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
@@ -84,7 +84,7 @@ class LoginActivity : AppCompatActivity() {
             TextUtils.isEmpty(binding.loginUsername.text.toString().trim { it <= ' ' }) -> {
                 Toast.makeText(
                     this@LoginActivity,
-                    "Please enter email.",
+                    getString(R.string.please_enter_email),
                     Toast.LENGTH_SHORT
                 ).show()
                 binding.actionLogin.isEnabled = true
@@ -99,13 +99,13 @@ class LoginActivity : AppCompatActivity() {
                         if (task.isSuccessful) {
                             Toast.makeText(
                                 this,
-                                "Password reset email sent. Please check your inbox.",
+                                getString(R.string.password_reset_email_sent),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
                             Toast.makeText(
                                 this,
-                                "Error: ${task.exception?.message}",
+                                task.exception?.message,
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
@@ -137,8 +137,8 @@ class LoginActivity : AppCompatActivity() {
 
         // Declare variables to keep track of password visibility state and text selection
         var isPasswordVisible = false
-        var startPass = 0
-        var endPass = 0
+        var startPass: Int
+        var endPass: Int
 
         binding.showPass.setOnClickListener {
             // Update the password visibility and image resource based on the current state
@@ -183,7 +183,7 @@ class LoginActivity : AppCompatActivity() {
                 TextUtils.isEmpty(binding.loginUsername.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@LoginActivity,
-                        "Please enter email.",
+                        getString(R.string.please_enter_email),
                         Toast.LENGTH_SHORT
                     ).show()
                     binding.actionLogin.isEnabled = true
@@ -193,7 +193,7 @@ class LoginActivity : AppCompatActivity() {
                 TextUtils.isEmpty(binding.loginPassword.text.toString().trim { it <= ' ' }) -> {
                     Toast.makeText(
                         this@LoginActivity,
-                        "Please enter password.",
+                        getString(R.string.please_enter_password),
                         Toast.LENGTH_SHORT
                     ).show()
                     binding.actionLogin.isEnabled = true
@@ -211,7 +211,7 @@ class LoginActivity : AppCompatActivity() {
                                 if (user != null && user.isEmailVerified) {
                                     Toast.makeText(
                                         this@LoginActivity,
-                                        "You are logged in successfully.",
+                                        getString(R.string.you_logged_in_successfully),
                                         Toast.LENGTH_SHORT
                                     ).show()
 
@@ -226,7 +226,7 @@ class LoginActivity : AppCompatActivity() {
                                 } else {
                                     Toast.makeText(
                                         this@LoginActivity,
-                                        "Please verify your email address.",
+                                        getString(R.string.please_verify_your_email_address),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     binding.actionLogin.isEnabled = true

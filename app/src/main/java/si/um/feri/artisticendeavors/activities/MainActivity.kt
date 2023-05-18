@@ -14,6 +14,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.adapters.MainPostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding
@@ -27,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var posts: MutableList<Post>
     private lateinit var adapter: MainPostAdapter
     private lateinit var listenerRegistration: ListenerRegistration
-    private val tag: String = "MainActivity"
+    private val tag: String = getString(R.string.main_activity)
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
 
         db = Firebase.firestore
         posts = mutableListOf()
-        adapter = MainPostAdapter(posts)
+        adapter = MainPostAdapter(this, posts)
 
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(
                 this@MainActivity,
-                "You logged out successfully.",
+                getString(R.string.you_logged_out_successfully),
                 Toast.LENGTH_SHORT
             ).show()
         }

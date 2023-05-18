@@ -1,22 +1,25 @@
 package si.um.feri.artisticendeavors.adapters
 
+import android.content.Context
 import android.content.Intent
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.MainItemPostBinding
 import timber.log.Timber
 
-class MainPostAdapter(private val posts: List<Post>) :
+class MainPostAdapter(private val context: Context, private val posts: List<Post>) :
     RecyclerView.Adapter<MainPostAdapter.ViewHolder>() {
+
+    private val tag = "MainPostAdapter"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -40,9 +43,9 @@ class MainPostAdapter(private val posts: List<Post>) :
 
             val auth = FirebaseAuth.getInstance()
             val user = auth.currentUser
-            val storage = Firebase.storage
+            val storage = FirebaseStorage.getInstance()
             val storageRef = storage.reference
-            val db = Firebase.firestore
+            val db = FirebaseFirestore.getInstance()
             val currentUserId = user?.uid
 
             // Add this code to open the full-size image when the user clicks on it
@@ -56,7 +59,7 @@ class MainPostAdapter(private val posts: List<Post>) :
                 db.collection("users").document(currentUserId)
                 db.collection("users").document(currentUserId)
                     .get()
-                    .continueWith {
+                    .addOnSuccessListener {
                         val imageRef = storageRef.child("images/${username}.jpg")
                         imageRef.downloadUrl
                             .addOnSuccessListener { uri ->
@@ -65,8 +68,16 @@ class MainPostAdapter(private val posts: List<Post>) :
                             }
                             .addOnFailureListener { exception ->
                                 // Handle any errors that may occur
-                                Timber.e("TAG", "Error downloading image: $exception")
+                                val errorMessage =
+                                    context.getString(R.string.error_downloading_image, exception)
+                                Timber.e(tag, errorMessage)
                             }
+                    }
+                    .addOnFailureListener { exception ->
+                        // Handle any errors that may occur
+                        val errorMessage =
+                            context.getString(R.string.error_loading_user_data, exception)
+                        Timber.e(tag, errorMessage)
                     }
             }
 

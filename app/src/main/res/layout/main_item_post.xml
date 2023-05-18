@@ -16,7 +16,7 @@
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:background="@mipmap/ic_profile_picture"
-            android:contentDescription="@string/profile_picture" />
+            android:contentDescription="@string/profile_image" />
 
         <TextView
             android:id="@+id/tvUsername"
