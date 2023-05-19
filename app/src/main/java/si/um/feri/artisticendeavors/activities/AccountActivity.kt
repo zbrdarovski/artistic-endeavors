@@ -1,9 +1,9 @@
 package si.um.feri.artisticendeavors.activities
 
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.InputType
 import android.text.TextUtils
@@ -14,7 +14,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -28,7 +27,6 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
-import com.squareup.picasso.Picasso
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import si.um.feri.artisticendeavors.ActivitySwitcher
 import si.um.feri.artisticendeavors.Color
+import si.um.feri.artisticendeavors.Photoshop
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.Toolbar
 import si.um.feri.artisticendeavors.Validator
@@ -43,7 +42,6 @@ import si.um.feri.artisticendeavors.VisibilitySwitcher
 import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
-import java.io.ByteArrayOutputStream
 
 class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAccountBinding
@@ -51,8 +49,6 @@ class AccountActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
 
     private lateinit var imageRef: StorageReference
-
-    private lateinit var galleryLauncher: ActivityResultLauncher<String>
 
     private val storage = Firebase.storage
     private val storageRef = storage.reference
@@ -63,17 +59,19 @@ class AccountActivity : AppCompatActivity() {
     private lateinit var validator: Validator
     private lateinit var visibilitySwitcher: VisibilitySwitcher
     private lateinit var color: Color
+    private lateinit var photoshop: Photoshop
 
-    private fun loadProfileImage() {
-        // Load profile image
-        imageRef.downloadUrl.addOnSuccessListener { uri ->
-            // Use Picasso to load the image into the ImageView
-            Picasso.get().load(uri).into(binding.profpic)
-        }.addOnFailureListener { exception ->
-            // Handle any errors that may occur
-            val errorMessage = getString(R.string.error_downloading_image, exception)
-            Timber.e(tag, errorMessage)
+    @RequiresApi(Build.VERSION_CODES.P)
+    val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { imageUri ->
+            photoshop.handleImageSelection(imageUri) { downloadUrl ->
+                // Handle further actions specific to the activity
+                photoshop.loadProfileImage(downloadUrl, binding.profpic)
+            }
         }
+    }.also { launcher ->
+        // Set the MIME type explicitly to allow selecting images
+        launcher.launch("image/*")
     }
 
     private suspend fun deleteUserData(currentUsername: String) {
@@ -230,6 +228,7 @@ class AccountActivity : AppCompatActivity() {
         validator = Validator(this)
         visibilitySwitcher = VisibilitySwitcher(this)
         color = Color()
+        photoshop = Photoshop(this)
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         val currentUserId = currentUser?.uid
@@ -238,45 +237,29 @@ class AccountActivity : AppCompatActivity() {
             val user = userDocument.result?.toObject(User::class.java)
             val username = user?.username
             imageRef = storageRef.child("images/${username}.jpg")
-            loadProfileImage()
-        }
+            val imageRef = storageRef.child("images/${username}.jpg")
 
-        val listener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
-            // Scale the image to prevent using too much memory
-            decoder.setTargetSize(100, 100)
-        }
-
-        galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { imageUri ->
-                // Convert image into Bitmap
-                val bitmap = ImageDecoder.decodeBitmap(
-                    ImageDecoder.createSource(contentResolver, imageUri), listener
-                )
-
-                // Convert the Bitmap to ByteArray
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-                val data = byteArrayOutputStream.toByteArray()
-
-                // Upload the image to Firebase Storage
-                val uploadTask = imageRef.putBytes(data)
-                uploadTask.addOnSuccessListener { taskSnapshot ->
-                    // Image uploaded successfully
-                    val downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl.toString()
-                    Timber.d(tag, getString(R.string.image_uploaded_successfully, downloadUrl))
-
-                    // Update the photo in the app
-                    loadProfileImage()
-                }.addOnFailureListener { exception ->
-                    // Image upload failed
-                    Timber.e(tag, R.string.image_upload_failed, exception)
-                }
+            // Get the download URL as a string
+            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                val downloadUrl = uri.toString()
+                // Use the download URL as needed
+                // Example: Log the URL
+                photoshop.loadProfileImage(downloadUrl, binding.profpic)
+                Timber.d(tag, downloadUrl)
+            }.addOnFailureListener { exception ->
+                // Handle any errors that may occur
+                Timber.e(tag, "Error getting download URL: $exception")
             }
         }
 
         // Call function to open gallery
         binding.change.setOnClickListener {
-            galleryLauncher.launch("image/*")
+            galleryLauncher.launch(
+                Intent(
+                    Intent.ACTION_PICK,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                ).toString()
+            )
         }
 
         // Show/Hide password and repeat password
@@ -301,14 +284,16 @@ class AccountActivity : AppCompatActivity() {
 
             override fun afterTextChanged(s: Editable?) {
                 val newPassword = s?.toString()?.trim() ?: ""
+                val repeatPassword = binding.repeat.text.toString().trim()
 
                 binding.password.error = validator.passwordErrorMessage(newPassword)
-                // Check if the repeat password matches the password
-                val repeatPassword = binding.repeat.text.toString().trim()
 
                 // Enable or disable the reset button based on the password requirements and password match
                 binding.reset.isEnabled =
-                    validator.isPasswordValid(newPassword) && newPassword == repeatPassword
+                    validator.isPasswordValid(newPassword) && validator.arePasswordsMatching(
+                        newPassword,
+                        repeatPassword
+                    )
             }
         })
 
@@ -327,17 +312,19 @@ class AccountActivity : AppCompatActivity() {
                 val repeatPassword = s?.toString()?.trim() ?: ""
 
                 // Check if the repeat password matches the password
-                val isRepeatMatching = newPassword == repeatPassword
+                val arePasswordsMatching =
+                    validator.arePasswordsMatching(newPassword, repeatPassword)
 
                 // Show/hide the password mismatch hint
-                if (repeatPassword.isNotEmpty() && !isRepeatMatching) {
+                if (repeatPassword.isNotEmpty() && !arePasswordsMatching) {
                     binding.repeat.error = getString(R.string.passwords_do_not_match)
                 } else {
                     binding.repeat.error = null
                 }
 
                 // Enable or disable the reset button based on the password requirements and password match
-                binding.reset.isEnabled = validator.isPasswordValid(newPassword) && isRepeatMatching
+                binding.reset.isEnabled =
+                    validator.isPasswordValid(newPassword) && arePasswordsMatching
             }
         })
 

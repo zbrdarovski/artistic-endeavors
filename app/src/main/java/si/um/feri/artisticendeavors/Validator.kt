@@ -105,4 +105,8 @@ class Validator(private val context: Context) {
         val passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*\\W).{8,}$"
         return password.matches(passwordPattern.toRegex())
     }
+
+    fun arePasswordsMatching(password: String, repeat: String): Boolean {
+        return password == repeat
+    }
 }
