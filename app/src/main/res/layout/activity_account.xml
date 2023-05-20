@@ -40,7 +40,7 @@
             app:layout_constraintTop_toBottomOf="@+id/reset" />
 
         <TextView
-            android:id="@+id/profileImage"
+            android:id="@+id/profileImageLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -54,7 +54,7 @@
             app:layout_constraintTop_toBottomOf="@+id/includeToolbar" />
 
         <ImageView
-            android:id="@+id/profpic"
+            android:id="@+id/profile_image"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginStart="16dp"
@@ -65,7 +65,7 @@
             android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profileImage" />
+            app:layout_constraintTop_toBottomOf="@+id/profileImageLabel" />
 
         <Button
             android:id="@+id/change"
@@ -81,7 +81,7 @@
             app:backgroundTint="@color/teal_200"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profpic" />
+            app:layout_constraintTop_toBottomOf="@+id/profile_image" />
 
         <EditText
             android:id="@+id/password"

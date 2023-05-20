@@ -1,9 +1,7 @@
 package si.um.feri.artisticendeavors.activities
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.InputType
 import android.text.TextUtils
@@ -14,7 +12,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -39,7 +36,6 @@ import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.Toolbar
 import si.um.feri.artisticendeavors.Validator
 import si.um.feri.artisticendeavors.VisibilitySwitcher
-import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 
@@ -48,10 +44,9 @@ class AccountActivity : AppCompatActivity() {
     private val auth = FirebaseAuth.getInstance()
     private lateinit var db: FirebaseFirestore
 
-    private lateinit var imageRef: StorageReference
+    private lateinit var profileImageReference: StorageReference
 
     private val storage = Firebase.storage
-    private val storageRef = storage.reference
 
     private lateinit var tag: String
     private lateinit var toolbar: Toolbar
@@ -60,19 +55,6 @@ class AccountActivity : AppCompatActivity() {
     private lateinit var visibilitySwitcher: VisibilitySwitcher
     private lateinit var color: Color
     private lateinit var photoshop: Photoshop
-
-    @RequiresApi(Build.VERSION_CODES.P)
-    val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { imageUri ->
-            photoshop.handleImageSelection(imageUri) { downloadUrl ->
-                // Handle further actions specific to the activity
-                photoshop.loadProfileImage(downloadUrl, binding.profpic)
-            }
-        }
-    }.also { launcher ->
-        // Set the MIME type explicitly to allow selecting images
-        launcher.launch("image/*")
-    }
 
     private suspend fun deleteUserData(currentUsername: String) {
         val auth = FirebaseAuth.getInstance()
@@ -92,9 +74,6 @@ class AccountActivity : AppCompatActivity() {
                 // Delete the post document
                 document.reference.delete().await()
             }
-
-        // Delete user's profile picture
-        val profileImageReference = storage.reference.child("images/$currentUsername.jpg")
 
         try {
             profileImageReference.delete().await()
@@ -228,38 +207,20 @@ class AccountActivity : AppCompatActivity() {
         validator = Validator(this)
         visibilitySwitcher = VisibilitySwitcher(this)
         color = Color()
-        photoshop = Photoshop(this)
+        val activityResultRegistry =
+            this.activityResultRegistry // Replace 'activity' with your actual Activity reference
+        photoshop = Photoshop(this, activityResultRegistry)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val currentUserId = currentUser?.uid
+        profileImageReference =
+            storage.reference.child("images/${auth.currentUser?.displayName}.jpg")
 
-        db.collection("users").document(currentUserId!!).get().continueWith { userDocument ->
-            val user = userDocument.result?.toObject(User::class.java)
-            val username = user?.username
-            imageRef = storageRef.child("images/${username}.jpg")
-            val imageRef = storageRef.child("images/${username}.jpg")
+        // Load profile image
+        photoshop.loadImage(profileImageReference, binding.profileImage)
 
-            // Get the download URL as a string
-            imageRef.downloadUrl.addOnSuccessListener { uri ->
-                val downloadUrl = uri.toString()
-                // Use the download URL as needed
-                // Example: Log the URL
-                photoshop.loadProfileImage(downloadUrl, binding.profpic)
-                Timber.d(tag, downloadUrl)
-            }.addOnFailureListener { exception ->
-                // Handle any errors that may occur
-                Timber.e(tag, "Error getting download URL: $exception")
-            }
-        }
+        val galleryLauncher = photoshop.launch(profileImageReference, binding.profileImage)
 
-        // Call function to open gallery
         binding.change.setOnClickListener {
-            galleryLauncher.launch(
-                Intent(
-                    Intent.ACTION_PICK,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                ).toString()
-            )
+            galleryLauncher.launch("image/*")
         }
 
         // Show/Hide password and repeat password

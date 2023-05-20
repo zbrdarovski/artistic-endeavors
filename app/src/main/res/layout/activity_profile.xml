@@ -35,7 +35,7 @@
             app:layout_constraintTop_toBottomOf="@+id/includeToolbar">
 
             <ImageView
-                android:id="@+id/profpic"
+                android:id="@+id/profile_image"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_marginStart="16dp"
@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:layout_toEndOf="@+id/profpic"
+                android:layout_toEndOf="@+id/profile_image"
                 android:text="@string/username"
                 android:textSize="24sp"
                 android:textStyle="bold|italic"
@@ -73,7 +73,7 @@
             tools:listitem="@layout/profile_item_post" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabCreate"
+            android:id="@+id/add_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="500dp"
