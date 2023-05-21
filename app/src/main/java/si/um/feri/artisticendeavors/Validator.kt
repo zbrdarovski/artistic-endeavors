@@ -1,6 +1,9 @@
 package si.um.feri.artisticendeavors
 
 import android.content.Context
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseUser
 
 class Validator(private val context: Context) {
     // Define the username requirements
@@ -53,7 +56,7 @@ class Validator(private val context: Context) {
     }
 
     // Define the password requirements
-    val passwordRequirements = listOf(
+    private val passwordRequirements = listOf(
         context.getString(R.string.password_must_be_at_least_eight_characters_long),
         context.getString(R.string.password_must_contain_at_least_one_lowercase_letter),
         context.getString(R.string.password_must_contain_at_least_one_uppercase_letter),
@@ -108,5 +111,10 @@ class Validator(private val context: Context) {
 
     fun arePasswordsMatching(password: String, repeat: String): Boolean {
         return password == repeat
+    }
+
+    fun authenticate(email: String, password: String, currentUser: FirebaseUser): Task<Void> {
+        val authCredential = EmailAuthProvider.getCredential(email, password)
+        return currentUser.reauthenticate(authCredential)
     }
 }

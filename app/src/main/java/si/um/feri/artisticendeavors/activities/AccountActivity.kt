@@ -2,28 +2,14 @@ package si.um.feri.artisticendeavors.activities
 
 import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.InputType
-import android.text.TextUtils
-import android.text.TextWatcher
-import android.text.method.PasswordTransformationMethod
-import android.view.Gravity
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.google.firebase.auth.EmailAuthProvider
+import androidx.core.widget.addTextChangedListener
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -31,6 +17,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import si.um.feri.artisticendeavors.ActivitySwitcher
 import si.um.feri.artisticendeavors.Color
+import si.um.feri.artisticendeavors.Dialog
+import si.um.feri.artisticendeavors.Messenger
 import si.um.feri.artisticendeavors.Photoshop
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.Toolbar
@@ -40,179 +28,37 @@ import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 
 class AccountActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityAccountBinding
-    private val auth = FirebaseAuth.getInstance()
-    private lateinit var db: FirebaseFirestore
-
-    private lateinit var profileImageReference: StorageReference
-
-    private val storage = Firebase.storage
-
-    private lateinit var tag: String
-    private lateinit var toolbar: Toolbar
-    private lateinit var activitySwitcher: ActivitySwitcher
-    private lateinit var validator: Validator
-    private lateinit var visibilitySwitcher: VisibilitySwitcher
-    private lateinit var color: Color
-    private lateinit var photoshop: Photoshop
-
-    private suspend fun deleteUserData(currentUsername: String) {
-        val auth = FirebaseAuth.getInstance()
-        val fs = FirebaseFirestore.getInstance()
-        val storage = FirebaseStorage.getInstance()
-
-        // Delete user's posts and images
-        fs.collection("posts").whereEqualTo("user.username", currentUsername).get().await()
-            .forEach { document ->
-                // Delete the post image
-                val imageUrl = document.getString("image_url")
-                if (imageUrl != null) {
-                    val imageRef = storage.getReferenceFromUrl(imageUrl)
-                    imageRef.delete().await()
-                }
-
-                // Delete the post document
-                document.reference.delete().await()
-            }
-
-        try {
-            profileImageReference.delete().await()
-        } catch (e: Exception) {
-            // Handle the exception (e.g., log the error, show a toast, etc.)
-            val errorMessage = getString(R.string.failed_to_delete_profile_image, e)
-            Timber.e(tag, errorMessage)
-        }
-
-        // Delete user's user document
-        fs.collection("users").whereEqualTo("username", currentUsername).get().await()
-            .forEach { document ->
-                document.reference.delete().await()
-            }
-
-        // Delete user's account
-        auth.currentUser?.delete()?.await()
+    private val binding: ActivityAccountBinding by lazy {
+        ActivityAccountBinding.inflate(layoutInflater)
     }
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val currentUser: FirebaseUser by lazy { auth.currentUser!! }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val storage: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
+    private val profileImageReference: StorageReference by lazy {
+        storage.reference.child("images/${currentUser.displayName}.jpg")
+    }
+    private val validator: Validator by lazy { Validator(this) }
+    private val visibilitySwitcher: VisibilitySwitcher by lazy { VisibilitySwitcher(this) }
+    private val messenger: Messenger by lazy { Messenger(this) }
+    private val dialog: Dialog by lazy { Dialog(this, visibilitySwitcher, color) }
 
-    // Assuming this code is inside an Activity or Fragment
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun deleteUserAccount() {
-        val currentUsername = FirebaseAuth.getInstance().currentUser?.displayName
-
-        if (currentUsername != null) {
-            val passwordEditText = EditText(this)
-            passwordEditText.inputType =
-                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            passwordEditText.hint = getString(R.string.enter_current_password)
-
-            val showHideButton = Button(this)
-            showHideButton.text = getString(R.string.show)
-            showHideButton.setTextColor(ContextCompat.getColor(this, R.color.teal_700))
-            showHideButton.setBackgroundResource(R.drawable.custom_button)
-            showHideButton.backgroundTintList =
-                ContextCompat.getColorStateList(this, R.color.teal_200)
-            showHideButton.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END
-            }
-
-            visibilitySwitcher.showPasswordWithButton(showHideButton, passwordEditText)
-
-            val passwordPromptLayout = LinearLayout(this)
-            passwordPromptLayout.orientation = LinearLayout.HORIZONTAL
-            passwordPromptLayout.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-
-            val passwordEditTextParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            passwordEditTextParams.weight = 1.0f // Take up available space
-            passwordEditText.layoutParams = passwordEditTextParams
-
-            passwordPromptLayout.addView(passwordEditText)
-            passwordPromptLayout.addView(showHideButton)
-
-            val passwordPrompt = AlertDialog.Builder(this)
-                .setTitle(color.colorize(getString(R.string.confirm_account_deletion), "#E36363"))
-                .setView(passwordPromptLayout)
-                .setPositiveButton(color.colorize(getString(R.string.delete), "#E36363")) { _, _ ->
-                    val password = passwordEditText.text.toString()
-                    if (password.isEmpty()) {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.please_enter_the_current_password_to_confirm_account_deletion),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@setPositiveButton
-                    }
-                    val currentEmail = auth.currentUser?.email
-                    val credential = currentEmail?.let {
-                        EmailAuthProvider.getCredential(it, password)
-                    }
-                    val user = FirebaseAuth.getInstance().currentUser
-                    if (credential != null) {
-                        user?.reauthenticate(credential)
-                            ?.addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    GlobalScope.launch(Dispatchers.IO) {
-                                        deleteUserData(currentUsername)
-                                        FirebaseAuth.getInstance().signOut()
-                                        activitySwitcher.startNewActivity(
-                                            this@AccountActivity,
-                                            LoginActivity::class.java
-                                        )
-
-                                        runOnUiThread {
-                                            Toast.makeText(
-                                                this@AccountActivity,
-                                                getString(R.string.account_deleted_successfully),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                } else {
-                                    Toast.makeText(
-                                        this,
-                                        getString(R.string.incorrect_password_account_deletion_cancelled),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                    }
-                }
-                .setNegativeButton(color.colorize(getString(R.string.cancel), "#84B589"), null)
-                .create()
-            passwordPrompt.show()
-        }
+    private val tag: String by lazy { getString(R.string.account_activity) }
+    private val color: Color by lazy { Color() }
+    private val photoshop: Photoshop by lazy {
+        Photoshop(this, this.activityResultRegistry)
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAccountBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        tag = getString(R.string.account_activity)
-        db = Firebase.firestore
-        activitySwitcher = ActivitySwitcher()
-        toolbar = Toolbar(
-            this, auth, binding.includeToolbar.homeOption,
-            binding.includeToolbar.profileOption, binding.includeToolbar.accountOption,
-            binding.includeToolbar.actionSignOut
-        )
-        toolbar.bindToolbar()
-        validator = Validator(this)
-        visibilitySwitcher = VisibilitySwitcher(this)
-        color = Color()
-        val activityResultRegistry =
-            this.activityResultRegistry // Replace 'activity' with your actual Activity reference
-        photoshop = Photoshop(this, activityResultRegistry)
-
-        profileImageReference =
-            storage.reference.child("images/${auth.currentUser?.displayName}.jpg")
+        binding.includeToolbar.apply {
+            Toolbar(
+                this@AccountActivity, auth, homeOption, profileOption, accountOption, actionSignOut
+            ).bindToolbar()
+        }
 
         // Load profile image
         photoshop.loadImage(profileImageReference, binding.profileImage)
@@ -223,217 +69,129 @@ class AccountActivity : AppCompatActivity() {
             galleryLauncher.launch("image/*")
         }
 
-        // Show/Hide password and repeat password
         visibilitySwitcher.showPasswordWithImage(binding.showPass, binding.password)
         visibilitySwitcher.showPasswordWithImage(binding.showRepeatPass, binding.repeat)
 
-        var tempCurr = ""
-        var tmpNew: String
-
-        // Initialize the "Reset" button as disabled
-        binding.reset.isEnabled = false
-
-        // Add a TextWatcher to update the password requirements and enable/disable the reset button
-        binding.password.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action needed
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // No action needed
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                val newPassword = s?.toString()?.trim() ?: ""
-                val repeatPassword = binding.repeat.text.toString().trim()
-
-                binding.password.error = validator.passwordErrorMessage(newPassword)
-
-                // Enable or disable the reset button based on the password requirements and password match
-                binding.reset.isEnabled =
-                    validator.isPasswordValid(newPassword) && validator.arePasswordsMatching(
-                        newPassword,
-                        repeatPassword
-                    )
-            }
-        })
-
-        // Add a TextWatcher to check if the repeat password matches the password
-        binding.repeat.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action needed
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // No action needed
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                val newPassword = binding.password.text.toString().trim()
-                val repeatPassword = s?.toString()?.trim() ?: ""
-
-                // Check if the repeat password matches the password
-                val arePasswordsMatching =
-                    validator.arePasswordsMatching(newPassword, repeatPassword)
-
-                // Show/hide the password mismatch hint
-                if (repeatPassword.isNotEmpty() && !arePasswordsMatching) {
-                    binding.repeat.error = getString(R.string.passwords_do_not_match)
-                } else {
-                    binding.repeat.error = null
-                }
-
-                // Enable or disable the reset button based on the password requirements and password match
-                binding.reset.isEnabled =
-                    validator.isPasswordValid(newPassword) && arePasswordsMatching
-            }
-        })
-
-        binding.reset.setOnClickListener {
-            val input = EditText(this)
-            input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            input.transformationMethod = PasswordTransformationMethod.getInstance()
-            input.setText(tempCurr)
-            input.hint = getString(R.string.enter_current_password)
-
-            val showHideButton = Button(this)
-            showHideButton.text = getString(R.string.show)
-            showHideButton.setTextColor(ContextCompat.getColor(this, R.color.teal_700))
-            showHideButton.setBackgroundResource(R.drawable.custom_button)
-            showHideButton.backgroundTintList =
-                ContextCompat.getColorStateList(this, R.color.teal_200)
-
-            visibilitySwitcher.showPasswordWithButton(showHideButton, input)
-
-            val layout = LinearLayout(this)
-            val layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            layout.layoutParams = layoutParams
-            layout.orientation = LinearLayout.HORIZONTAL
-
-            val inputParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            inputParams.weight = 1f
-            input.layoutParams = inputParams
-            layout.addView(input)
-
-            val buttonParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            showHideButton.layoutParams = buttonParams
-            layout.addView(showHideButton)
-
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle(color.colorize(getString(R.string.confirm_password_change), "#E36363"))
-            builder.setView(layout)
-
-            builder.setPositiveButton(
-                color.colorize(
-                    getString(R.string.change),
-                    "#E36363"
-                )
-            ) { _, _ ->
-                val currentPasswordTemp = input.text.toString().trim()
-                if (TextUtils.isEmpty(currentPasswordTemp)) {
-                    Toast.makeText(
-                        this@AccountActivity,
-                        getString(R.string.please_enter_the_current_password_to_confirm_password_change),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@setPositiveButton
-                }
-
-                tmpNew = binding.password.text.toString().trim()
-
-                if (tempCurr == tmpNew) {
-                    Toast.makeText(
-                        this@AccountActivity,
-                        getString(R.string.current_password_cant_be_same_as_the_new_password),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@setPositiveButton
-                }
-
-                val user = FirebaseAuth.getInstance().currentUser
-                if (user != null) {
-                    // Re-authenticate the user with their current password
-                    val credential =
-                        EmailAuthProvider.getCredential(user.email!!, currentPasswordTemp)
-                    user.reauthenticate(credential).addOnCompleteListener { reAuthTask ->
-                        if (reAuthTask.isSuccessful) {
-                            // Password matches, continue with updating the password
-                            val newPassword = binding.password.text.toString().trim()
-                            val repeatPassword = binding.repeat.text.toString().trim()
-
-                            // Check if the new password satisfies Firebase's criteria
-                            if (validator.isPasswordValid(newPassword)) {
-                                if (newPassword == repeatPassword) {
-                                    user.updatePassword(newPassword)
-                                        .addOnCompleteListener { updateTask ->
-                                            if (updateTask.isSuccessful) {
-                                                Toast.makeText(
-                                                    this@AccountActivity,
-                                                    getString(R.string.password_updated_successfully),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                binding.password.text.clear()
-                                                binding.repeat.text.clear()
-                                                tempCurr = ""
-                                                tmpNew = ""
-                                            } else {
-                                                Toast.makeText(
-                                                    this@AccountActivity,
-                                                    getString(R.string.failed_to_update_the_password_please_try_again),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        }
-                                } else {
-                                    Toast.makeText(
-                                        this@AccountActivity,
-                                        getString(R.string.passwords_do_not_match),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            } else {
-                                Toast.makeText(
-                                    this@AccountActivity,
-                                    getString(R.string.new_password_must_satisfy_the_criteria),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        } else {
-                            Toast.makeText(
-                                this@AccountActivity,
-                                getString(R.string.incorrect_current_password_please_try_again),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }
-            }
-
-            builder.setNegativeButton(
-                color.colorize(
-                    getString(R.string.cancel),
-                    "#84B589"
-                )
-            ) { dialog, _ ->
-                dialog.dismiss()
-            }
-
-            val dialog = builder.create()
-            dialog.show()
+        binding.password.addTextChangedListener {
+            binding.password.error = validator.passwordErrorMessage(it?.toString()?.trim() ?: "")
         }
 
-        // Delete account
+        binding.repeat.addTextChangedListener {
+            val newPassword = binding.password.text.toString().trim()
+            val arePasswordsMatching =
+                validator.arePasswordsMatching(newPassword, it?.toString()?.trim() ?: "")
+
+            binding.repeat.error = if (!arePasswordsMatching) {
+                getString(R.string.passwords_do_not_match)
+            } else {
+                null
+            }
+
+            binding.changePassword.isEnabled =
+                validator.isPasswordValid(newPassword) && arePasswordsMatching
+        }
+
+        binding.changePassword.isEnabled = false
+
+        binding.changePassword.setOnClickListener {
+            dialog.createPasswordPrompt(
+                getString(R.string.confirm_password_change), getString(R.string.change)
+            ) { password ->
+                handleChangePassword(password)
+            }
+        }
+
         binding.delete.setOnClickListener {
-            deleteUserAccount()
+            dialog.createPasswordPrompt(
+                getString(R.string.confirm_account_deletion), getString(R.string.delete)
+            ) { password ->
+                handleAccountDeletion(password)
+            }
+        }
+    }
+
+    private fun handleChangePassword(password: String) {
+        val newPassword = binding.password.text.toString().trim()
+        val repeatPassword = binding.repeat.text.toString().trim()
+
+        currentUser.email?.let { email ->
+            validator.authenticate(email, password, currentUser).addOnCompleteListener { authTask ->
+                if (authTask.isSuccessful) {
+                    if (validator.arePasswordsMatching(newPassword, repeatPassword)) {
+                        currentUser.updatePassword(newPassword)
+                            .addOnCompleteListener { updateTask ->
+                                if (updateTask.isSuccessful) {
+                                    messenger.message(getString(R.string.password_updated_successfully))
+                                    binding.password.text.clear()
+                                    binding.repeat.text.clear()
+                                } else {
+                                    messenger.message(getString(R.string.failed_to_update_the_password_please_try_again))
+                                }
+                            }
+                    } else {
+                        messenger.message(getString(R.string.passwords_do_not_match))
+                    }
+                } else {
+                    messenger.message(getString(R.string.incorrect_current_password_please_try_again))
+                }
+            }
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun handleAccountDeletion(password: String) {
+        if (password.isEmpty()) {
+            messenger.message(getString(R.string.please_enter_the_current_password_to_confirm_account_deletion))
+            return
+        }
+
+        currentUser.email?.let { email ->
+            validator.authenticate(email, password, currentUser).addOnCompleteListener { authTask ->
+                if (authTask.isSuccessful) {
+                    GlobalScope.launch(Dispatchers.Main) {
+                        deleteUserData(currentUser.displayName)
+                        messenger.message(getString(R.string.account_deleted_successfully))
+                        val activitySwitcher = ActivitySwitcher()
+                        activitySwitcher.startNewActivity(
+                            this@AccountActivity, LoginActivity::class.java
+                        )
+                    }
+                } else {
+                    messenger.message(getString(R.string.incorrect_password_account_deletion_cancelled))
+                }
+            }
+        }
+    }
+
+    private suspend fun deleteUserData(currentUsername: String?) {
+        currentUsername?.let {
+            val postsQuerySnapshot =
+                db.collection("posts").whereEqualTo("user.username", it).get().await()
+
+            for (document in postsQuerySnapshot) {
+                val imageUrl = document.getString("image_url")
+                if (imageUrl != null) {
+                    val imageRef = storage.getReferenceFromUrl(imageUrl)
+                    imageRef.delete().await()
+                }
+                document.reference.delete().await()
+            }
+
+            try {
+                profileImageReference.delete().await()
+            } catch (e: Exception) {
+                val errorMessage = getString(R.string.failed_to_delete_profile_image, e)
+                Timber.e(tag, errorMessage)
+            }
+
+            val usersQuerySnapshot =
+                db.collection("users").whereEqualTo("username", it).get().await()
+
+            for (document in usersQuerySnapshot) {
+                document.reference.delete().await()
+            }
+
+            currentUser.delete().await()
         }
     }
 }
