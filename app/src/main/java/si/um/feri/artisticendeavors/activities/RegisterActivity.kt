@@ -1,211 +1,190 @@
 package si.um.feri.artisticendeavors.activities
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
-import android.widget.Toast
+import android.view.View
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.VisibilitySwitcher
+import si.um.feri.artisticendeavors.Messenger
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.Validator
 import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
-    private lateinit var activitySwitcher: ActivitySwitcher
-    private lateinit var validator: Validator
-    private lateinit var visibilitySwitcher: VisibilitySwitcher
-
-    private fun registerUser() {
-        val email: String = binding.email.text.toString().trim { it <= ' ' }
-        val password: String = binding.password.text.toString().trim { it <= ' ' }
-        val username: String = binding.username.text.toString().trim { it <= ' ' }
-        val auth = FirebaseAuth.getInstance()
-        val db = FirebaseFirestore.getInstance()
-
-        // Check if username is taken
-        db.collection("users")
-            .whereEqualTo("username", username)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (!querySnapshot.isEmpty) {
-                    // Username is taken
-                    Toast.makeText(
-                        this,
-                        getString(R.string.this_username_is_already_taken),
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                } else {
-                    // Username is available
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnSuccessListener { authResult ->
-                            val firebaseUser = authResult.user
-                            firebaseUser?.sendEmailVerification()
-                                ?.addOnSuccessListener {
-                                    Toast.makeText(
-                                        this,
-                                        getString(R.string.verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in),
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
-                                    // Save the username as the user's display name
-                                    val profileUpdates = UserProfileChangeRequest.Builder()
-                                        .setDisplayName(username)
-                                        .build()
-                                    firebaseUser.updateProfile(profileUpdates)
-
-                                    // Create user with only the username
-                                    val newUser = hashMapOf(
-                                        "username" to username
-                                    )
-
-                                    // Add user to Fs
-                                    db.collection("users")
-                                        .document(authResult.user!!.uid)
-                                        .set(newUser)
-                                        .addOnSuccessListener {
-                                            auth.signOut()
-
-                                            // Redirect to LoginActivity
-                                            activitySwitcher.startNewActivity(
-                                                this@RegisterActivity,
-                                                LoginActivity::class.java
-                                            )
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Toast.makeText(
-                                                this,
-                                                e.message,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            binding.actionRegister.isEnabled = true
-                                        }
-                                }
-                                ?.addOnFailureListener { e ->
-                                    Toast.makeText(
-                                        this,
-                                        e.message,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    binding.actionRegister.isEnabled = true
-                                }
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
-                            binding.actionRegister.isEnabled = true
-                        }
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
-                binding.actionRegister.isEnabled = true
-            }
-    }
-
+    private val activitySwitcher by lazy { ActivitySwitcher() }
+    private val validator by lazy { Validator(this) }
+    private val messenger by lazy { Messenger(this) }
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
     private lateinit var binding: ActivityRegisterBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        activitySwitcher = ActivitySwitcher()
-        validator = Validator(this)
-        visibilitySwitcher = VisibilitySwitcher(this)
+        setupUI()
+        setupTextWatchers()
+        setupClickListeners()
+    }
 
-        // ActivitySwitcher from RegisterActivity to LoginActivity
-        binding.option.setOnClickListener {
-            activitySwitcher.startNewActivity(
-                this@RegisterActivity,
-                LoginActivity::class.java
-            )
+    private fun setupUI() {
+        binding.showPass.setOnClickListener {
+            binding.password.showPasswordWithImage(binding.showPass)
         }
 
-        // Show/Hide password and repeat password
-        visibilitySwitcher.showPasswordWithImage(binding.showPass, binding.password)
-        visibilitySwitcher.showPasswordWithImage(binding.showRepeatPass, binding.repeat)
+        binding.showRepeatPass.setOnClickListener {
+            binding.repeat.showPasswordWithImage(binding.showRepeatPass)
+        }
+    }
 
-        // Add text change listeners to handle validations
-        binding.email.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                // Validate email format
-                if (Patterns.EMAIL_ADDRESS.matcher(s.toString()).matches()) {
-                    binding.email.error = null
-                } else {
-                    binding.email.error = getString(R.string.invalid_email_format)
-                }
-            }
+    private fun setupTextWatchers() {
+        binding.email.addTextChangedListener {
+            binding.email.validateEmailFormat()
+        }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        binding.username.addTextChangedListener {
+            binding.username.validateUsername()
+        }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
+        binding.password.addTextChangedListener {
+            binding.password.validatePassword()
+            binding.repeat.validateRepeatPassword(binding.password.text.toString())
+        }
 
-        // Add a TextWatcher to update the username requirements
-        binding.username.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action needed
-            }
+        binding.repeat.addTextChangedListener {
+            binding.repeat.validateRepeatPassword(binding.password.text.toString())
+        }
+    }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // No action needed
-            }
+    private fun setupClickListeners() {
+        binding.option.setOnClickListener {
+            activitySwitcher.startNewActivity(this@RegisterActivity, LoginActivity::class.java)
+        }
 
-            override fun afterTextChanged(s: Editable?) {
-                binding.username.error = validator.usernameErrorMessage(s?.toString()?.trim() ?: "")
-            }
-        })
-
-        binding.password.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action needed
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // No action needed
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                binding.password.error = validator.passwordErrorMessage(s?.toString()?.trim() ?: "")
-            }
-        })
-
-        binding.repeat.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No action needed
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // No action needed
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                val password = binding.password.text.toString()
-                val repeatPassword = binding.repeat.text.toString()
-
-                // Set the error message of binding.password based on the password match
-                binding.repeat.error =
-                    if (password == repeatPassword) null else getString(R.string.passwords_do_not_match)
-            }
-        })
-
-        // Register a new user to Firebase
         binding.actionRegister.setOnClickListener {
-            val isEmailValid =
-                Patterns.EMAIL_ADDRESS.matcher(binding.email.text.toString()).matches()
-            val isUsernameValid = validator.isUsernameValid(binding.username.text.toString())
-            val isPasswordValid = validator.isPasswordValid(binding.password.text.toString())
-            val isPasswordsMatch =
-                binding.password.text.toString() == binding.repeat.text.toString()
-
-            if (isEmailValid && isUsernameValid && isPasswordValid && isPasswordsMatch) {
+            if (isValidInput()) {
                 binding.actionRegister.isEnabled = false
                 registerUser()
             }
         }
+    }
+
+    private fun isValidInput(): Boolean {
+        val email = binding.email.text.toString().trim()
+        val username = binding.username.text.toString().trim()
+        val password = binding.password.text.toString().trim()
+        val repeatPassword = binding.repeat.text.toString().trim()
+
+        return when {
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                binding.email.error = getString(R.string.invalid_email_format)
+                false
+            }
+
+            !validator.isUsernameValid(username) -> {
+                binding.username.error = validator.usernameErrorMessage(username)
+                false
+            }
+
+            !validator.isPasswordValid(password) -> {
+                binding.password.error = validator.passwordErrorMessage(password)
+                false
+            }
+
+            password != repeatPassword -> {
+                binding.repeat.error = getString(R.string.passwords_do_not_match)
+                false
+            }
+
+            else -> true
+        }
+    }
+
+    private fun registerUser() {
+        val username = binding.username.text.toString().trim()
+
+        db.collection("users").whereEqualTo("username", username).get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    messenger.message(getString(R.string.this_username_is_already_taken))
+                } else {
+                    val email = binding.email.text.toString().trim()
+                    val password = binding.password.text.toString().trim()
+
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener { authResult ->
+                            val firebaseUser = authResult.user
+                            firebaseUser?.sendEmailVerification()?.addOnSuccessListener {
+                                messenger.message(getString(R.string.verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in))
+
+                                val profileUpdates =
+                                    UserProfileChangeRequest.Builder().setDisplayName(username)
+                                        .build()
+                                firebaseUser.updateProfile(profileUpdates)
+
+                                val newUser = hashMapOf("username" to username)
+
+                                db.collection("users").document(authResult.user!!.uid).set(newUser)
+                                    .addOnSuccessListener {
+                                        auth.signOut()
+                                        activitySwitcher.startNewActivity(
+                                            this@RegisterActivity, LoginActivity::class.java
+                                        )
+                                    }.addOnFailureListener { e ->
+                                        messenger.message(e.message.toString())
+                                        binding.actionRegister.isEnabled = true
+                                    }
+                            }?.addOnFailureListener { e ->
+                                messenger.message(e.message.toString())
+                                binding.actionRegister.isEnabled = true
+                            }
+                        }.addOnFailureListener { e ->
+                            messenger.message(e.message.toString())
+                            binding.actionRegister.isEnabled = true
+                        }
+                }
+            }.addOnFailureListener { e ->
+                messenger.message(e.message.toString())
+                binding.actionRegister.isEnabled = true
+            }
+    }
+
+    private fun EditText.showPasswordWithImage(showPassView: View) {
+        val drawableRes =
+            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) R.mipmap.ic_closed else R.mipmap.ic_open
+        showPassView.setBackgroundResource(drawableRes)
+        transformationMethod =
+            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) PasswordTransformationMethod.getInstance() else HideReturnsTransformationMethod.getInstance()
+        setSelection(text?.length ?: 0)
+    }
+
+    private fun EditText.validateEmailFormat() {
+        val email = text.toString().trim()
+        error = if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) null
+        else context.getString(R.string.invalid_email_format)
+    }
+
+    private fun EditText.validateUsername() {
+        val username = text.toString().trim()
+        error = validator.usernameErrorMessage(username)
+    }
+
+    private fun EditText.validatePassword() {
+        val password = text.toString().trim()
+        error = validator.passwordErrorMessage(password)
+    }
+
+    private fun EditText.validateRepeatPassword(password: String) {
+        val repeatPassword = text.toString().trim()
+        error = if (password == repeatPassword) null
+        else context.getString(R.string.passwords_do_not_match)
     }
 }

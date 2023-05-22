@@ -21,4 +21,5 @@
 - [User icons](https://www.flaticon.com/free-icons/user) - User icons created by Smashicons - Flaticon
 - [Edit icons](https://www.flaticon.com/free-icons/edit) - Edit icons created by Kiranshastry - Flaticon
 - [Close icons](https://www.flaticon.com/free-icons/close) - Close icons created by Stasy - Flaticon
+- [Add image icons](https://www.flaticon.com/free-icons/add-image) - Add image icons created by nawicon - Flaticon
 

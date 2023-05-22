@@ -95,12 +95,13 @@ class Validator(private val context: Context) {
     // Validate the username
     fun isUsernameValid(username: String): Boolean {
         val usernamePattern = "^[a-z0-9._]+$"
-        return username.length in 8..20 && username.matches(usernamePattern.toRegex()) &&
-                !username.startsWith("_") && !username.startsWith(".") &&
-                !username.endsWith("_") && !username.endsWith(".") &&
-                !username.contains("..") && !username.contains("__") &&
-                !username.contains("._") && !username.contains("_.") &&
-                !username.contains("_.") && !username.contains("._")
+        return username.length in 8..20 && username.matches(usernamePattern.toRegex()) && !username.startsWith(
+            "_"
+        ) && !username.startsWith(".") && !username.endsWith("_") && !username.endsWith(".") && !username.contains(
+            ".."
+        ) && !username.contains("__") && !username.contains("._") && !username.contains("_.") && !username.contains(
+            "_."
+        ) && !username.contains("._")
     }
 
     // Validate the password

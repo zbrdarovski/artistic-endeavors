@@ -10,7 +10,6 @@ import android.text.format.DateUtils
 import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,6 +18,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.activities.EditPostDescriptionActivity
 import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ProfileItemPostBinding
@@ -73,28 +73,22 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
                 binding.root.context.startActivity(intent)
             }
 
-            db.collection("users").document(currentUserId!!)
-                .get()
-                .addOnSuccessListener {
-                    val imageRef = storageRef.child("images/${username}.jpg")
-                    imageRef.downloadUrl
-                        .addOnSuccessListener { uri ->
-                            // Use Picasso to load the image into the ImageView
-                            Picasso.get().load(uri).into(binding.ivProfileImage)
-                        }
-                        .addOnFailureListener { exception ->
-                            // Handle any errors that may occur
-                            val errorMessage =
-                                context.getString(R.string.error_downloading_image, exception)
-                            Timber.e(tag, errorMessage)
-                        }
-                }
-                .addOnFailureListener { exception ->
+            db.collection("users").document(currentUserId!!).get().addOnSuccessListener {
+                val imageRef = storageRef.child("images/${username}.jpg")
+                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                    // Use Picasso to load the image into the ImageView
+                    Picasso.get().load(uri).into(binding.ivProfileImage)
+                }.addOnFailureListener { exception ->
                     // Handle any errors that may occur
                     val errorMessage =
-                        context.getString(R.string.error_loading_user_data, exception)
+                        context.getString(R.string.error_downloading_image, exception)
                     Timber.e(tag, errorMessage)
                 }
+            }.addOnFailureListener { exception ->
+                // Handle any errors that may occur
+                val errorMessage = context.getString(R.string.error_loading_user_data, exception)
+                Timber.e(tag, errorMessage)
+            }
 
             binding.tvRelativeTime.text =
                 post.creation_time_milliseconds?.let { DateUtils.getRelativeTimeSpanString(it) }
@@ -105,108 +99,63 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
                 val builder = AlertDialog.Builder(binding.root.context)
                 builder.setTitle(
                     color(
-                        context.getString(R.string.confirm_post_deletion),
-                        "#E36363"
+                        context.getString(R.string.confirm_post_deletion), "#E36363"
                     )
-                )
-                    .setPositiveButton(
-                        color(
-                            context.getString(R.string.delete),
-                            "#E36363"
-                        )
-                    ) { _, _ ->
-                        // Get the position of the post in the list
-                        val index = posts.indexOf(post)
+                ).setPositiveButton(
+                    color(
+                        context.getString(R.string.delete), "#E36363"
+                    )
+                ) { _, _ ->
+                    // Get the position of the post in the list
+                    val index = posts.indexOf(post)
 
-                        // Remove the post from the list and notify the adapter
-                        if (index != -1) {
-                            posts.removeAt(index)
-                            notifyItemRemoved(index)
-                        }
+                    // Remove the post from the list and notify the adapter
+                    if (index != -1) {
+                        posts.removeAt(index)
+                        notifyItemRemoved(index)
+                    }
 
-                        // Delete the post
-                        val postRef = db.collection("posts").document(post.id!!)
-                        postRef.get().addOnSuccessListener { documentSnapshot ->
-                            val p = documentSnapshot.toObject(Post::class.java)
-                            p?.image_url?.let { imageUrl ->
-                                val imageRef = Firebase.storage.getReferenceFromUrl(imageUrl)
-                                imageRef.delete().addOnSuccessListener {
-                                    val errorMessage =
-                                        context.getString(R.string.image_deleted_successfully)
-                                    Timber.d(tag, errorMessage)
-                                }.addOnFailureListener { e ->
-                                    val errorMessage =
-                                        context.getString(R.string.error_deleting_image, e)
-                                    Timber.w(tag, errorMessage)
-                                }
+                    // Delete the post
+                    val postRef = db.collection("posts").document(post.id!!)
+                    postRef.get().addOnSuccessListener { documentSnapshot ->
+                        val p = documentSnapshot.toObject(Post::class.java)
+                        p?.image_url?.let { imageUrl ->
+                            val imageRef = Firebase.storage.getReferenceFromUrl(imageUrl)
+                            imageRef.delete().addOnSuccessListener {
+                                val errorMessage =
+                                    context.getString(R.string.image_deleted_successfully)
+                                Timber.d(tag, errorMessage)
+                            }.addOnFailureListener { e ->
+                                val errorMessage =
+                                    context.getString(R.string.error_deleting_image, e)
+                                Timber.w(tag, errorMessage)
                             }
-                            postRef.delete()
-                                .addOnSuccessListener {
-                                    val errorMessage =
-                                        context.getString(R.string.post_deleted_successfully)
-                                    Timber.d(tag, errorMessage)
-                                }
-                                .addOnFailureListener { e ->
-                                    val errorMessage =
-                                        context.getString(R.string.error_deleting_post, e)
-                                    Timber.w(tag, errorMessage)
-                                }
+                        }
+                        postRef.delete().addOnSuccessListener {
+                            val errorMessage = context.getString(R.string.post_deleted_successfully)
+                            Timber.d(tag, errorMessage)
+                        }.addOnFailureListener { e ->
+                            val errorMessage = context.getString(R.string.error_deleting_post, e)
+                            Timber.w(tag, errorMessage)
                         }
                     }
-                    .setNegativeButton(
-                        color(
-                            context.getString(R.string.cancel),
-                            "#84B589"
-                        )
-                    ) { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .show()
+                }.setNegativeButton(
+                    color(
+                        context.getString(R.string.cancel), "#84B589"
+                    )
+                ) { dialog, _ ->
+                    dialog.dismiss()
+                }.show()
             }
         }
 
         fun setEditClickListener(post: Post) {
             binding.editPost.setOnClickListener {
-                // Create an EditText view for user input
-                val editText = EditText(binding.root.context)
-                editText.setText(post.description)
-
-                // Create an AlertDialog to display the EditText view
-                val builder = AlertDialog.Builder(binding.root.context)
-                builder.setTitle(color(context.getString(R.string.edit_post), "#E36363"))
-                    .setView(editText)
-                    .setPositiveButton(
-                        color(
-                            context.getString(R.string.save),
-                            "#E36363"
-                        )
-                    ) { _, _ ->
-                        // Get the new description entered by the user
-                        val newDescription = editText.text.toString().trim()
-
-                        // Update the post's description in the database
-                        val postRef = db.collection("posts").document(post.id!!)
-                        postRef.update("description", newDescription)
-                            .addOnSuccessListener {
-                                // Update the post object and notify the adapter
-                                post.description = newDescription
-                                notifyItemChanged(posts.indexOf(post))
-                            }
-                            .addOnFailureListener { e ->
-                                val errorMessage =
-                                    context.getString(R.string.error_updating_post_description, e)
-                                Timber.w(tag, errorMessage)
-                            }
-                    }
-                    .setNegativeButton(
-                        color(
-                            context.getString(R.string.cancel),
-                            "#84B589"
-                        )
-                    ) { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .show()
+                val intent = Intent(binding.root.context, EditPostDescriptionActivity::class.java)
+                intent.putExtra("image_url", post.image_url)
+                intent.putExtra("description", post.description)
+                intent.putExtra("post_id", post.id)
+                binding.root.context.startActivity(intent)
             }
         }
     }

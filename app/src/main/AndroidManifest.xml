@@ -17,6 +17,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ArtisticEndeavors">
         <activity
+            android:name=".activities.EditPostDescriptionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity
+            android:name=".activities.AddPostActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity
             android:name=".activities.FullSizeImageActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.NoActionBar" />

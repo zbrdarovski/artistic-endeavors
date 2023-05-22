@@ -3,9 +3,9 @@ package si.um.feri.artisticendeavors.activities
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,6 +13,8 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import si.um.feri.artisticendeavors.ActivitySwitcher
 import si.um.feri.artisticendeavors.Photoshop
@@ -25,17 +27,16 @@ import timber.log.Timber
 
 class ProfileActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProfileBinding
-    private val auth = FirebaseAuth.getInstance()
-    private lateinit var db: FirebaseFirestore
-    private lateinit var posts: MutableList<Post>
-    private lateinit var adapter: ProfilePostAdapter
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db: FirebaseFirestore by lazy { Firebase.firestore }
+    private val posts: MutableList<Post> = mutableListOf()
+    private val adapter: ProfilePostAdapter by lazy { ProfilePostAdapter(this, posts) }
     private lateinit var listenerRegistration: ListenerRegistration
-    private val storage = Firebase.storage
-    private val storageRef = storage.reference
-    private lateinit var tag: String
+    private val storage: FirebaseStorage by lazy { Firebase.storage }
+    private val storageRef: StorageReference by lazy { storage.reference }
+    private val tag: String by lazy { getString(R.string.profile_activity) }
+    private val photoshop: Photoshop by lazy { Photoshop(this, activityResultRegistry) }
     private lateinit var toolbar: Toolbar
-    private lateinit var activitySwitcher: ActivitySwitcher
-    private lateinit var photoshop: Photoshop
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,78 +44,71 @@ class ProfileActivity : AppCompatActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        tag = getString(R.string.profile_activity)
-        db = Firebase.firestore
-        activitySwitcher = ActivitySwitcher()
         toolbar = Toolbar(
-            this, auth, binding.includeToolbar.homeOption,
-            binding.includeToolbar.profileOption, binding.includeToolbar.accountOption,
+            this,
+            auth,
+            binding.includeToolbar.homeOption,
+            binding.includeToolbar.profileOption,
+            binding.includeToolbar.accountOption,
             binding.includeToolbar.actionSignOut
         )
         toolbar.bindToolbar()
 
-        posts = mutableListOf()
-        adapter = ProfilePostAdapter(this, posts)
-
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
 
-        val activityResultRegistry =
-            this.activityResultRegistry // Replace 'activity' with your actual Activity reference
-        photoshop = Photoshop(this, activityResultRegistry)
-
         val currentUsername = auth.currentUser?.displayName
-
         binding.usern.text = currentUsername
 
         val profileImageReference = storageRef.child("images/${currentUsername}.jpg")
 
-        // Load profile image
         photoshop.loadImage(profileImageReference, binding.profileImage)
 
+        binding.addPost.setOnClickListener {
+            val activitySwitcher = ActivitySwitcher()
+            activitySwitcher.startNewActivity(this, AddPostActivity::class.java)
+        }
 
         val postsReference = db.collection("posts").limit(20)
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
-        listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
-            if (exception != null || snapshot == null) {
-                Timber.e(tag, exception?.message)
-                return@addSnapshotListener
-            }
-            val listOfPosts = snapshot.toObjects(Post::class.java)
-            val iterator = listOfPosts.iterator()
-            while (iterator.hasNext()) {
-                val p = iterator.next()
-                if (p.user?.username != currentUsername) {
-                    iterator.remove()
-                }
-            }
-            if (listOfPosts.isEmpty()) {
-                binding.noPosts.visibility = View.VISIBLE
-            } else {
-                binding.noPosts.visibility = View.GONE
-                posts.clear()
-                posts.addAll(listOfPosts)
-                adapter.apply {
-                    notifyItemRangeRemoved(0, itemCount)
-                    notifyItemRangeInserted(0, posts.size)
-                }
-            }
-        }
 
-        // Add new post
-        binding.addPost.setOnClickListener {
-            // TO - DO
-            Toast.makeText(
-                this@ProfileActivity,
-                "TO - DO",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        listenerRegistration = lazy {
+            postsReference.addSnapshotListener { snapshot, exception ->
+                if (exception != null || snapshot == null) {
+                    Timber.e(tag, "Error fetching posts: $exception")
+                    return@addSnapshotListener
+                }
+
+                val listOfPosts = snapshot.toObjects(Post::class.java)
+                val filteredPosts = listOfPosts.filter { it.user?.username == currentUsername }
+
+                binding.noPosts.visibility =
+                    if (filteredPosts.isEmpty()) View.VISIBLE else View.GONE
+
+                val diffCallback = ProfilePostDiffCallback(posts, filteredPosts)
+                val diffResult = DiffUtil.calculateDiff(diffCallback)
+
+                posts.clear()
+                posts.addAll(filteredPosts)
+                diffResult.dispatchUpdatesTo(adapter)
+            }
+        }.value
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Remove listener to prevent memory leaks
         listenerRegistration.remove()
+    }
+
+    private inner class ProfilePostDiffCallback(
+        private val oldList: List<Post>, private val newList: List<Post>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            oldList[oldItemPosition].id == newList[newItemPosition].id
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            oldList[oldItemPosition] == newList[newItemPosition]
     }
 }

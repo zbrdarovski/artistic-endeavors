@@ -95,4 +95,8 @@
     <string name="password_reset_email_sent">Poslano e-poštno sporočilo za ponastavitev gesla.</string>
     <string name="please_enter_the_current_password_to_confirm_account_deletion">Vnesite trenutno geslo, da potrdite izbris računa.</string>
     <string name="verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in">Potrditveno e-poštno sporočilo je bilo poslano v vaš nabiralnik. Preden se prijavite, potrdite svoj e-poštni naslov.</string>
+    <string name="send">Pošlji</string>
+    <string name="re_upload_functionality">Funkcija ponovnega nalaganja</string>
+    <string name="enter_post_description">Vnesite opis objave…</string>
+    <string name="upload">Naloži</string>
 </resources>
