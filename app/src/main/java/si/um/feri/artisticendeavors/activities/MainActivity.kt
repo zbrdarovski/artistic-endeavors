@@ -14,7 +14,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import si.um.feri.artisticendeavors.Toolbar
+import si.um.feri.artisticendeavors.tools.Toolbar
 import si.um.feri.artisticendeavors.adapters.MainPostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ActivityMainBinding

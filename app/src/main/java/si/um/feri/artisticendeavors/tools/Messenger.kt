@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.tools
 
 import android.content.Context
 import android.widget.Toast

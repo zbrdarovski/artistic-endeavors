@@ -32,9 +32,10 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/inputText"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:inputType="textMultiLine"
-                android:lines="5" />
+                android:lines="5"
+                android:textColorHint="#616161" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -54,10 +55,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:elevation="6dp"
                 android:text="@string/cancel"
+                android:background="@drawable/custom_button"
                 android:textColor="@color/teal_700"
                 app:backgroundTint="@color/teal_200"
-                android:elevation="6dp"
                 style="?android:attr/buttonBarButtonStyle" />
 
             <!-- Send button -->
@@ -65,12 +67,13 @@
                 android:id="@+id/sendButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:elevation="6dp"
                 android:text="@string/upload"
+                android:background="@drawable/custom_button"
                 android:textColor="@color/teal_700"
                 app:backgroundTint="@color/teal_200"
-                android:elevation="6dp"
                 style="?android:attr/buttonBarButtonStyle" />
 
         </LinearLayout>

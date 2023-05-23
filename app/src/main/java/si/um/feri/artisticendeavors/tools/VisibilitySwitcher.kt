@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.tools
 
 import android.content.Context
 import android.text.method.HideReturnsTransformationMethod
@@ -6,6 +6,7 @@ import android.text.method.PasswordTransformationMethod
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import si.um.feri.artisticendeavors.R
 
 class VisibilitySwitcher(private val context: Context) {
     fun showPasswordWithImage(showPassword: ImageView, password: EditText){

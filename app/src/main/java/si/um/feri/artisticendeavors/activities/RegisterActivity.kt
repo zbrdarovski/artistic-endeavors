@@ -4,17 +4,17 @@ import android.os.Bundle
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
-import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
-import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.Messenger
+import si.um.feri.artisticendeavors.tools.ActivitySwitcher
+import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.R
-import si.um.feri.artisticendeavors.Validator
+import si.um.feri.artisticendeavors.tools.Validator
 import si.um.feri.artisticendeavors.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
@@ -115,6 +115,7 @@ class RegisterActivity : AppCompatActivity() {
             .addOnSuccessListener { querySnapshot ->
                 if (!querySnapshot.isEmpty) {
                     messenger.message(getString(R.string.this_username_is_already_taken))
+                    binding.actionRegister.isEnabled = true
                 } else {
                     val email = binding.email.text.toString().trim()
                     val password = binding.password.text.toString().trim()
@@ -157,12 +158,22 @@ class RegisterActivity : AppCompatActivity() {
             }
     }
 
-    private fun EditText.showPasswordWithImage(showPassView: View) {
+    private fun EditText.showPasswordWithImage(showPassView: ImageView) {
         val drawableRes =
-            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) R.mipmap.ic_closed else R.mipmap.ic_open
-        showPassView.setBackgroundResource(drawableRes)
+            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) {
+                R.mipmap.ic_open
+            } else {
+                R.mipmap.ic_closed
+            }
+        showPassView.setImageResource(drawableRes)
+
         transformationMethod =
-            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) PasswordTransformationMethod.getInstance() else HideReturnsTransformationMethod.getInstance()
+            if (transformationMethod == HideReturnsTransformationMethod.getInstance()) {
+                PasswordTransformationMethod.getInstance()
+            } else {
+                HideReturnsTransformationMethod.getInstance()
+            }
+
         setSelection(text?.length ?: 0)
     }
 

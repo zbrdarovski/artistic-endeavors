@@ -1,4 +1,4 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.tools
 
 import android.content.Context
 import android.text.InputType
@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import si.um.feri.artisticendeavors.R
 
 class Dialog(
     private val context: Context,

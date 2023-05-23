@@ -1,9 +1,10 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.tools
 
 import android.content.Context
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseUser
+import si.um.feri.artisticendeavors.R
 
 class Validator(private val context: Context) {
     // Define the username requirements

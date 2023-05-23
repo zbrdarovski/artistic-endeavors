@@ -10,8 +10,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.squareup.picasso.Picasso
-import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.Messenger
+import si.um.feri.artisticendeavors.tools.ActivitySwitcher
+import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.databinding.ActivityAddPostBinding
 import timber.log.Timber

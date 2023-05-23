@@ -16,10 +16,10 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
-import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.Photoshop
+import si.um.feri.artisticendeavors.tools.ActivitySwitcher
+import si.um.feri.artisticendeavors.tools.Photoshop
 import si.um.feri.artisticendeavors.R
-import si.um.feri.artisticendeavors.Toolbar
+import si.um.feri.artisticendeavors.tools.Toolbar
 import si.um.feri.artisticendeavors.adapters.ProfilePostAdapter
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding

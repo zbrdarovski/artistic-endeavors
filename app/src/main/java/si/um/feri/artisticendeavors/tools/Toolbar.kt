@@ -1,10 +1,11 @@
-package si.um.feri.artisticendeavors
+package si.um.feri.artisticendeavors.tools
 
 import android.app.Activity
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.activities.AccountActivity
 import si.um.feri.artisticendeavors.activities.LoginActivity
 import si.um.feri.artisticendeavors.activities.MainActivity

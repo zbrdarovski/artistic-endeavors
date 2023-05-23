@@ -16,8 +16,8 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
-import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.Messenger
+import si.um.feri.artisticendeavors.tools.ActivitySwitcher
+import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.data.User
@@ -42,13 +42,28 @@ class AddPostActivity : AppCompatActivity() {
 
         val tag = "AddPostActivity"
 
-        lateinit var downloadUrl: String
+        var downloadUrl = ""
 
         val galleryLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
                     val imageUri = result.data?.data
                     if (imageUri != null) {
+                        if (downloadUrl != "") {
+                            val storage = Firebase.storage
+                            val stRef = storage.getReferenceFromUrl(downloadUrl)
+                            stRef.delete().addOnSuccessListener {
+                                // File deleted successfully
+                                Timber.i(getString(R.string.image_deleted_successfully))
+                            }.addOnFailureListener { exception ->
+                                // An error occurred while deleting the file
+                                // Handle the failure accordingly
+                                Timber.e(
+                                    getString(R.string.error_deleting_image),
+                                    exception.message.toString()
+                                )
+                            }
+                        }
                         // Convert image into Bitmap
                         val bitmap = ImageDecoder.decodeBitmap(
                             ImageDecoder.createSource(contentResolver, imageUri)
@@ -84,20 +99,10 @@ class AddPostActivity : AppCompatActivity() {
                             binding.imageView.isEnabled = true
                         }
                     } else {
-                        // Handle the case where the user canceled the gallery selection
-                        // Set downloadUrl to null or any appropriate value
-                        downloadUrl = ""
-                        // Update the imageView accordingly (e.g., set a placeholder image)
-                        binding.imageView.setImageResource(R.mipmap.ic_add)
                         // Enable the imageView
                         binding.imageView.isEnabled = true
                     }
                 } else {
-                    // Handle the case where the user canceled the gallery selection
-                    // Set downloadUrl to null or any appropriate value
-                    downloadUrl = ""
-                    // Update the imageView accordingly (e.g., set a placeholder image)
-                    binding.imageView.setImageResource(R.mipmap.ic_add)
                     // Enable the imageView
                     binding.imageView.isEnabled = true
                 }
@@ -163,20 +168,6 @@ class AddPostActivity : AppCompatActivity() {
 
         binding.imageView.setOnClickListener {
             binding.imageView.isEnabled = false
-            if (binding.sendButton.isEnabled) {
-                val storage = Firebase.storage
-                val storageRef = storage.getReferenceFromUrl(downloadUrl)
-                storageRef.delete().addOnSuccessListener {
-                    // File deleted successfully
-                    Timber.i(getString(R.string.image_deleted_successfully))
-                }.addOnFailureListener { exception ->
-                    // An error occurred while deleting the file
-                    // Handle the failure accordingly
-                    Timber.e(
-                        getString(R.string.error_deleting_image), exception.message.toString()
-                    )
-                }
-            }
             // Launch the gallery
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"

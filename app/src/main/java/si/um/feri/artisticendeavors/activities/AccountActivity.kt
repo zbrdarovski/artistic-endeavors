@@ -15,15 +15,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import si.um.feri.artisticendeavors.ActivitySwitcher
-import si.um.feri.artisticendeavors.Color
-import si.um.feri.artisticendeavors.Dialog
-import si.um.feri.artisticendeavors.Messenger
-import si.um.feri.artisticendeavors.Photoshop
+import si.um.feri.artisticendeavors.tools.ActivitySwitcher
+import si.um.feri.artisticendeavors.tools.Color
+import si.um.feri.artisticendeavors.tools.Dialog
+import si.um.feri.artisticendeavors.tools.Messenger
+import si.um.feri.artisticendeavors.tools.Photoshop
 import si.um.feri.artisticendeavors.R
-import si.um.feri.artisticendeavors.Toolbar
-import si.um.feri.artisticendeavors.Validator
-import si.um.feri.artisticendeavors.VisibilitySwitcher
+import si.um.feri.artisticendeavors.tools.Toolbar
+import si.um.feri.artisticendeavors.tools.Validator
+import si.um.feri.artisticendeavors.tools.VisibilitySwitcher
 import si.um.feri.artisticendeavors.databinding.ActivityAccountBinding
 import timber.log.Timber
 
