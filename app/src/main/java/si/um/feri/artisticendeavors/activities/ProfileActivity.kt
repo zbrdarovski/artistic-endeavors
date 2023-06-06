@@ -22,6 +22,7 @@ import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.tools.Toolbar
 import si.um.feri.artisticendeavors.adapters.ProfilePostAdapter
 import si.um.feri.artisticendeavors.data.Post
+import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.databinding.ActivityProfileBinding
 import timber.log.Timber
 
@@ -63,6 +64,30 @@ class ProfileActivity : AppCompatActivity() {
         val profileImageReference = storageRef.child("images/${currentUsername}.jpg")
 
         photoshop.loadImage(profileImageReference, binding.profileImage)
+        val userReference = db.collection("users")
+            .whereEqualTo("username", auth.currentUser?.displayName)
+
+        userReference.get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val documentSnapshot = querySnapshot.documents[0] // Only one matching user
+                    val userData = documentSnapshot.toObject(User::class.java)
+                    val description = userData?.biography
+
+                    // Access the description field
+                    if (description != null) {
+                        // Use the description here
+                        binding.biography.text = description
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                // Handle any potential errors
+                val errorMessage = getString(R.string.error_getting_user_data, e)
+                Timber.e(tag, errorMessage)
+            }
+
+
 
         binding.addPost.setOnClickListener {
             val activitySwitcher = ActivitySwitcher()

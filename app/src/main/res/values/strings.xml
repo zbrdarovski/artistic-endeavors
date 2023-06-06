@@ -97,6 +97,9 @@
     <string name="error_updating_document">Error updating document: %s</string>
     <string name="error_adding_document">Error adding document: %s</string>
     <string name="error_getting_download_url">Error getting download URL %s</string>
+    <string name="error_getting_user_data">Error getting user data %s</string>
+    <string name="error_updating_user_data">Error updating user data %s</string>
+    <string name="bio_updated_successfully">Bio updated successfully!</string>
     <string name="this_username_is_already_taken">"This username is already taken."</string>
     <string name="please_enter_the_current_password_to_confirm_account_deletion">Please enter the current password to confirm account deletion.</string>
     <string name="verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in">Verification email has been sent to your inbox. Please verify your email before logging in.</string>
@@ -104,5 +107,8 @@
     <string name="re_upload_functionality">Re - upload functionality</string>
     <string name="enter_post_description">Enter post description…</string>
     <string name="upload">Upload</string>
+    <string name="update_biography">Update biography…</string>
+    <string name="update_bio">update bio</string>
+    <string name="biography">Biography</string>
 
 </resources>

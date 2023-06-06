@@ -99,4 +99,10 @@
     <string name="re_upload_functionality">Funkcija ponovnega nalaganja</string>
     <string name="enter_post_description">Vnesite opis objave…</string>
     <string name="upload">Naloži</string>
+    <string name="update_biography">Posodobite biografijo…</string>
+    <string name="update_bio">posodobi bio</string>
+    <string name="biography">Biografija</string>
+    <string name="error_getting_user_data">Napaka pri pridobivanju uporabniških podatkov %s</string>
+    <string name="error_updating_user_data">Napaka pri posodabljanju uporabniških podatkov %s</string>
+    <string name="bio_updated_successfully">Biografija je bila uspešno posodobljena!</string>
 </resources>

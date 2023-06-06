@@ -2,6 +2,7 @@ package si.um.feri.artisticendeavors.activities
 
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
@@ -21,6 +22,7 @@ import si.um.feri.artisticendeavors.tools.Dialog
 import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.tools.Photoshop
 import si.um.feri.artisticendeavors.R
+import si.um.feri.artisticendeavors.data.User
 import si.um.feri.artisticendeavors.tools.Toolbar
 import si.um.feri.artisticendeavors.tools.Validator
 import si.um.feri.artisticendeavors.tools.VisibilitySwitcher
@@ -63,10 +65,78 @@ class AccountActivity : AppCompatActivity() {
         // Load profile image
         photoshop.loadImage(profileImageReference, binding.profileImage)
 
+        val userReference = db.collection("users")
+            .whereEqualTo("username", auth.currentUser?.displayName)
+
+        userReference.get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    val documentSnapshot = querySnapshot.documents[0] // Only one matching user
+                    val userData = documentSnapshot.toObject(User::class.java)
+                    val description = userData?.biography
+
+                    // Access the description field
+                    if (description != null) {
+                        // Use the description here
+                        binding.textInputEditText.text = Editable.Factory.getInstance().newEditable(description)
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                // Handle any potential errors
+                val errorMessage = getString(R.string.error_getting_user_data, e)
+                Timber.e(tag, errorMessage)
+            }
+
         val galleryLauncher = photoshop.launch(profileImageReference, binding.profileImage)
 
         binding.change.setOnClickListener {
             galleryLauncher.launch("image/*")
+        }
+
+        binding.updateBiography.isEnabled = false
+
+        binding.textInputEditText.addTextChangedListener {
+            binding.updateBiography.isEnabled = true
+        }
+
+        binding.updateBiography.setOnClickListener {
+            val newDescription = binding.textInputEditText.text.toString()
+
+            val userQuery = db.collection("users")
+                .whereEqualTo("username", auth.currentUser?.displayName)
+                .limit(1)
+
+            userQuery.get()
+                .addOnSuccessListener { querySnapshot ->
+                    if (!querySnapshot.isEmpty) {
+                        val documentSnapshot = querySnapshot.documents[0]
+                        val userRef = documentSnapshot.reference // Get the DocumentReference
+                        val userData = documentSnapshot.toObject(User::class.java)
+
+                        // Update the description field
+                        userData?.biography = newDescription
+
+                        // Update the document to database
+                        if (userData != null) {
+                            userRef.set(userData)
+                                .addOnSuccessListener {
+                                    // Document updated successfully
+                                    messenger.message(getString(R.string.bio_updated_successfully))
+                                }
+                                .addOnFailureListener { e ->
+                                    // Handle any potential errors
+                                    val errorMessage = getString(R.string.error_updating_user_data, e)
+                                    Timber.e(tag, errorMessage)
+                                }
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    // Handle any potential errors
+                    val errorMessage = getString(R.string.error_getting_user_data, e)
+                    Timber.e(tag, errorMessage)
+                }
         }
 
         visibilitySwitcher.showPasswordWithImage(binding.showPass, binding.password)
