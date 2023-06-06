@@ -11,12 +11,12 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.activities.EditPostDescriptionActivity
 import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
@@ -64,7 +64,7 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
             val username = post.user?.username as String
             binding.tvUsername.text = username
             binding.tvDescription.text = post.description
-            Picasso.get().load(post.image_url).into(binding.ivPost)
+            binding.ivPost.load(post.image_url)
 
             // Add this code to open the full-size image when the user clicks on it
             binding.ivPost.setOnClickListener {
@@ -77,7 +77,7 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
                 val imageRef = storageRef.child("images/${username}.jpg")
                 imageRef.downloadUrl.addOnSuccessListener { uri ->
                     // Use Picasso to load the image into the ImageView
-                    Picasso.get().load(uri).into(binding.ivProfileImage)
+                    binding.ivProfileImage.load(uri)
                 }.addOnFailureListener { exception ->
                     // Handle any errors that may occur
                     val errorMessage =

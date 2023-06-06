@@ -6,10 +6,10 @@ import android.text.Editable
 import android.text.TextWatcher
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import coil.load
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.tools.ActivitySwitcher
 import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.R
@@ -33,7 +33,7 @@ class EditPostDescriptionActivity : AppCompatActivity() {
         val tag = "EditPostDescriptionActivity"
 
         val imageUrl = intent.getStringExtra("image_url")
-        Picasso.get().load(imageUrl).into(binding.imageView)
+        binding.imageView.load(imageUrl)
 
         val description = intent.getStringExtra("description")
         binding.inputText.setText(description)

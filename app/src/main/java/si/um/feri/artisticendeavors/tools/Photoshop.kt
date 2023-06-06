@@ -9,8 +9,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import coil.load
 import com.google.firebase.storage.StorageReference
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.R
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
@@ -25,7 +25,7 @@ class Photoshop(
         imageReference.downloadUrl
             .addOnSuccessListener { uri ->
                 // Use Picasso to load the image into the ImageView
-                Picasso.get().load(uri).into(image)
+                image?.load(uri)
             }
             .addOnFailureListener { exception ->
                 // Handle any errors that may occur

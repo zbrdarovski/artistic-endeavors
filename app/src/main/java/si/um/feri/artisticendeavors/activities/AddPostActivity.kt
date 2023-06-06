@@ -9,13 +9,13 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import coil.load
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.tools.ActivitySwitcher
 import si.um.feri.artisticendeavors.tools.Messenger
 import si.um.feri.artisticendeavors.R
@@ -84,7 +84,7 @@ class AddPostActivity : AppCompatActivity() {
                             // Image uploaded successfully
                             imageRef.downloadUrl.addOnSuccessListener { uri ->
                                 downloadUrl = uri.toString()
-                                Picasso.get().load(downloadUrl).into(binding.imageView)
+                                binding.imageView.load(downloadUrl)
                                 binding.sendButton.isEnabled = true
                                 binding.imageView.isEnabled = true // Enable the imageView
                             }.addOnFailureListener { exception ->

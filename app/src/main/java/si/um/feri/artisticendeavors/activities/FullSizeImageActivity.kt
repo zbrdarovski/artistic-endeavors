@@ -2,7 +2,7 @@ package si.um.feri.artisticendeavors.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.squareup.picasso.Picasso
+import coil.load
 import si.um.feri.artisticendeavors.databinding.ActivityFullSizeImageBinding
 
 class FullSizeImageActivity : AppCompatActivity() {
@@ -15,7 +15,7 @@ class FullSizeImageActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val imageUrl = intent.getStringExtra("image_url")
-        Picasso.get().load(imageUrl).into(binding.ivFullSizeImage)
+        binding.ivFullSizeImage.load(imageUrl)
 
         binding.btnClose.setOnClickListener {
             finish()

@@ -6,10 +6,10 @@ import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.squareup.picasso.Picasso
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
 import si.um.feri.artisticendeavors.data.Post
@@ -39,7 +39,7 @@ class MainPostAdapter(private val context: Context, private val posts: List<Post
             val username = post.user?.username as String
             binding.tvUsername.text = username
             binding.tvDescription.text = post.description
-            Picasso.get().load(post.image_url).into(binding.ivPost)
+            binding.ivPost.load(post.image_url)
 
             val auth = FirebaseAuth.getInstance()
             val user = auth.currentUser
@@ -64,7 +64,7 @@ class MainPostAdapter(private val context: Context, private val posts: List<Post
                         imageRef.downloadUrl
                             .addOnSuccessListener { uri ->
                                 // Use Picasso to load the image into the ImageView
-                                Picasso.get().load(uri).into(binding.ivProfileImage)
+                                binding.ivProfileImage.load(uri)
                             }
                             .addOnFailureListener { exception ->
                                 // Handle any errors that may occur
