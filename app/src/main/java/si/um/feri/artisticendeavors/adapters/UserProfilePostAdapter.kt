@@ -12,15 +12,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import si.um.feri.artisticendeavors.R
 import si.um.feri.artisticendeavors.activities.FullSizeImageActivity
-import si.um.feri.artisticendeavors.activities.UserProfileActivity
 import si.um.feri.artisticendeavors.data.Post
 import si.um.feri.artisticendeavors.databinding.MainItemPostBinding
 import timber.log.Timber
 
-class MainPostAdapter(private val context: Context, private val posts: MutableList<Post>) :
-    RecyclerView.Adapter<MainPostAdapter.ViewHolder>() {
+class UserProfilePostAdapter(private val context: Context, private val posts: MutableList<Post>) :
+    RecyclerView.Adapter<UserProfilePostAdapter.ViewHolder>() {
 
-    private val tag = "MainPostAdapter"
+    private val tag = "UserProfilePostAdapter"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -63,20 +62,6 @@ class MainPostAdapter(private val context: Context, private val posts: MutableLi
                     // Handle any errors that may occur
                     Timber.e("Error fetching profile image URL: $e")
                 }
-
-            // Add click listener to the username TextView
-            binding.tvUsername.setOnClickListener {
-                val intent = Intent(binding.root.context, UserProfileActivity::class.java)
-                intent.putExtra("user_id", post.user?.id) // Pass the post user's ID to the profile activity
-                binding.root.context.startActivity(intent)
-            }
-
-            // Add click listener to the profile image ImageView
-            binding.ivProfileImage.setOnClickListener {
-                val intent = Intent(binding.root.context, UserProfileActivity::class.java)
-                intent.putExtra("user_id", post.user?.id) // Pass the post user's ID to the profile activity
-                binding.root.context.startActivity(intent)
-            }
 
             // Add click listener to open the full-size image when the user clicks on it
             binding.ivPost.setOnClickListener {

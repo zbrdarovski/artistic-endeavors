@@ -114,36 +114,70 @@ class AddPostActivity : AppCompatActivity() {
             val postText = binding.inputText.text.toString().trim()
             if (postText.isNotEmpty()) {
                 val currentUser = auth.currentUser
-                val newPost = Post(
-                    user = currentUser?.displayName?.let { User(username = it) },
-                    description = postText,
-                    creation_time_milliseconds = System.currentTimeMillis(),
-                    image_url = downloadUrl
-                )
-                // Add the post to the database
-                db.collection("posts").add(newPost).addOnSuccessListener { documentReference ->
-                    val postId = documentReference.id
-                    newPost.id = postId
-                    db.collection("posts").document(postId).set(newPost).addOnSuccessListener {
-                        // Log the document ID to verify that it was added correctly
-                        val errorMessage = getString(
-                            R.string.document_snapshot_written_with_id, postId
-                        )
-                        Timber.d(tag, errorMessage)
+
+                if (currentUser != null) {
+                    val userId = currentUser.uid
+                    val userRef = db.collection("users").document(userId)
+
+                    userRef.get().addOnSuccessListener { documentSnapshot ->
+                        if (documentSnapshot.exists()) {
+                            val username = documentSnapshot.getString("username") ?: ""
+                            val biography = documentSnapshot.getString("biography") ?: ""
+
+                            val user = User(
+                                username = username, biography = biography, id = userId
+                            )
+
+                            val newPost = Post(
+                                user = user,
+                                description = postText,
+                                creation_time_milliseconds = System.currentTimeMillis(),
+                                image_url = downloadUrl
+                            )
+
+                            // Add the post to the database
+                            db.collection("posts").add(newPost)
+                                .addOnSuccessListener { documentReference ->
+                                    val postId = documentReference.id
+                                    newPost.id = postId
+                                    db.collection("posts").document(postId).set(newPost)
+                                        .addOnSuccessListener {
+                                            // Log the document ID to verify that it was added correctly
+                                            val errorMessage = getString(
+                                                R.string.document_snapshot_written_with_id, postId
+                                            )
+                                            Timber.d(tag, errorMessage)
+                                        }.addOnFailureListener { e ->
+                                            val errorMessage =
+                                                getString(R.string.error_updating_document, e)
+                                            Timber.e(tag, errorMessage)
+                                        }
+
+                                    val activitySwitcher = ActivitySwitcher()
+                                    activitySwitcher.startNewActivity(
+                                        this, ProfileActivity::class.java
+                                    )
+                                }.addOnFailureListener { e ->
+                                    val errorMessage = getString(R.string.error_adding_document, e)
+                                    Timber.e(tag, errorMessage)
+                                }
+
+                        } else {
+                            // Document doesn't exist, handle accordingly
+                            messenger.message(getString(R.string.error_loading_user_data, ""))
+                        }
                     }.addOnFailureListener { e ->
-                        val errorMessage = getString(
-                            R.string.error_updating_document, e
-                        )
+                        // Error retrieving user data, handle accordingly
+                        val errorMessage = getString(R.string.error_getting_user_data, e)
                         Timber.e(tag, errorMessage)
                     }
-                    val activitySwitcher = ActivitySwitcher()
-                    activitySwitcher.startNewActivity(this, ProfileActivity::class.java)
-                }.addOnFailureListener { e ->
-                    val errorMessage = getString(R.string.error_adding_document, e)
-                    Timber.e(tag, errorMessage)
+
+                } else {
+                    // Current user is null, handle accordingly
+                    messenger.message(getString(R.string.option_sign_in))
                 }
             } else {
-                messenger.message("Post description is necessary")
+                messenger.message(getString(R.string.please_enter_post_description))
             }
         }
 

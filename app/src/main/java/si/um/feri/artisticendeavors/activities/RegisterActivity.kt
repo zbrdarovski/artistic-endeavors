@@ -123,6 +123,7 @@ class RegisterActivity : AppCompatActivity() {
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnSuccessListener { authResult ->
                             val firebaseUser = authResult.user
+                            val userId = firebaseUser?.uid
                             firebaseUser?.sendEmailVerification()?.addOnSuccessListener {
                                 messenger.message(getString(R.string.verification_email_has_been_sent_to_your_inbox_please_verify_your_email_before_logging_in))
 
@@ -131,13 +132,17 @@ class RegisterActivity : AppCompatActivity() {
                                         .build()
                                 firebaseUser.updateProfile(profileUpdates)
 
-                                val newUser = hashMapOf("username" to username)
+                                val newUser = hashMapOf(
+                                    "username" to username,
+                                    "id" to userId
+                                )
 
-                                db.collection("users").document(authResult.user!!.uid).set(newUser)
+                                db.collection("users").document(userId!!).set(newUser)
                                     .addOnSuccessListener {
                                         auth.signOut()
                                         activitySwitcher.startNewActivity(
-                                            this@RegisterActivity, LoginActivity::class.java
+                                            this@RegisterActivity,
+                                            LoginActivity::class.java
                                         )
                                     }.addOnFailureListener { e ->
                                         messenger.message(e.message.toString())

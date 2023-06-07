@@ -123,6 +123,7 @@ class AccountActivity : AppCompatActivity() {
                                 .addOnSuccessListener {
                                     // Document updated successfully
                                     messenger.message(getString(R.string.bio_updated_successfully))
+                                    binding.updateBiography.isEnabled = false
                                 }
                                 .addOnFailureListener { e ->
                                     // Handle any potential errors

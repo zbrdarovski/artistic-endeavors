@@ -110,5 +110,6 @@
     <string name="update_biography">Update biography…</string>
     <string name="update_bio">update bio</string>
     <string name="biography">Biography</string>
+    <string name="user_profile_activity" translatable="false">UserProfileActivity</string>
 
 </resources>
