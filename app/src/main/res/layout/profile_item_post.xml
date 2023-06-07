@@ -50,16 +50,14 @@
             android:id="@+id/tvUsername"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
             tools:text="username" />
 
         <TextView
-            android:id="@+id/tvRelativeTime"
+            android:id="@+id/tvCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            tools:text="1 day ago" />
+            android:text="@string/category"
+            android:textSize="24sp" />
 
         <ImageView
             android:id="@+id/ivPost"
@@ -76,6 +74,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             tools:text="Post description..." />
+
+        <TextView
+            android:id="@+id/tvRelativeTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            tools:text="1 day ago" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

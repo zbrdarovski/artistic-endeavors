@@ -16,9 +16,5 @@ class FullSizeImageActivity : AppCompatActivity() {
 
         val imageUrl = intent.getStringExtra("image_url")
         binding.ivFullSizeImage.load(imageUrl)
-
-        binding.btnClose.setOnClickListener {
-            finish()
-        }
     }
 }

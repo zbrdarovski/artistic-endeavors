@@ -42,6 +42,7 @@ class MainPostAdapter(private val context: Context, private val posts: MutableLi
             binding.tvUsername.text = username
             binding.tvDescription.text = post.description
             binding.ivPost.load(post.image_url)
+            binding.tvCategory.text = post.category
 
             val auth = FirebaseAuth.getInstance()
             val user = auth.currentUser

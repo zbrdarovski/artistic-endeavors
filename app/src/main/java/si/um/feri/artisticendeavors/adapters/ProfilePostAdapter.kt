@@ -65,6 +65,7 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
             binding.tvUsername.text = username
             binding.tvDescription.text = post.description
             binding.ivPost.load(post.image_url)
+            binding.tvCategory.text = post.category
 
             // Add this code to open the full-size image when the user clicks on it
             binding.ivPost.setOnClickListener {

@@ -132,7 +132,8 @@ class AddPostActivity : AppCompatActivity() {
                                 user = user,
                                 description = postText,
                                 creation_time_milliseconds = System.currentTimeMillis(),
-                                image_url = downloadUrl
+                                image_url = downloadUrl,
+                                category = binding.categorySpinner.selectedItem.toString()
                             )
 
                             // Add the post to the database

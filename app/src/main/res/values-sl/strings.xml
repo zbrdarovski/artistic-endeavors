@@ -105,4 +105,13 @@
     <string name="error_getting_user_data">Napaka pri pridobivanju uporabniških podatkov %s</string>
     <string name="error_updating_user_data">Napaka pri posodabljanju uporabniških podatkov %s</string>
     <string name="bio_updated_successfully">Biografija je bila uspešno posodobljena!</string>
+
+    <string-array name="category_array">
+        <item>Ponujanje umetniških storitev</item>
+        <item>Prodaja umetniških del</item>
+        <item>Promocija galerije</item>
+        <item>Promocija razstave</item>
+    </string-array>
+    <string name="choose_post_category">Izberite kategorijo objave:</string>
+    <string name="category">Kategorija</string>
 </resources>

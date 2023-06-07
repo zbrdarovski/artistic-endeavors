@@ -5,5 +5,6 @@ data class Post(
     var description: String? = null,
     var id: String? = null,
     var image_url: String? = null,
+    val category: String? = null,
     val user: User? = null
 )

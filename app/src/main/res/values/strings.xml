@@ -111,5 +111,13 @@
     <string name="update_bio">update bio</string>
     <string name="biography">Biography</string>
     <string name="user_profile_activity" translatable="false">UserProfileActivity</string>
+    <string name="choose_post_category">Choose post category:</string>
+    <string name="category">Category</string>
 
+    <string-array name="category_array">
+        <item>Offering art service</item>
+        <item>Selling artwork</item>
+        <item>Promoting gallery</item>
+        <item>Promoting exhibition</item>
+    </string-array>
 </resources>

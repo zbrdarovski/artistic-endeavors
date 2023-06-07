@@ -22,7 +22,21 @@
             app:srcCompat="@mipmap/ic_add"
             android:contentDescription="@string/post_image" />
 
+        <TextView
+            android:id="@+id/category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/choose_post_category"
+            android:textSize="16sp" />
+
         <!-- EditText for entering the post text -->
+        <Spinner
+            android:id="@+id/categorySpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/category_array"
+            android:minHeight="48dp" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/inputLayout"
             android:layout_width="match_parent"
