@@ -22,4 +22,3 @@
 - [Edit icons](https://www.flaticon.com/free-icons/edit) - Edit icons created by Kiranshastry - Flaticon
 - [Close icons](https://www.flaticon.com/free-icons/close) - Close icons created by Stasy - Flaticon
 - [Add image icons](https://www.flaticon.com/free-icons/add-image) - Add image icons created by nawicon - Flaticon
-- [Up arrow animated icons](https://www.flaticon.com/free-animated-icons/up-arrow) - Up arrow animated icons created by Freepik - Flaticon
