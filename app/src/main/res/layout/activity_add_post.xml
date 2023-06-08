@@ -5,6 +5,40 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- activity_add_post.xml -->
+
+    <RelativeLayout
+        android:id="@+id/progress"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/ic_profile_picture_background"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/loading_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="@string/uploading_image_please_be_patient"
+            android:textAllCaps="true"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/loading_photo"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp" />
+
+    </RelativeLayout>
+
     <LinearLayout
         android:id="@+id/profileContainer"
         android:layout_width="match_parent"
@@ -14,6 +48,7 @@
         android:background="?android:attr/colorBackground">
 
         <!-- ImageView for displaying the selected image -->
+
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="300dp"
@@ -26,10 +61,11 @@
             android:id="@+id/category"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:text="@string/choose_post_category"
             android:textSize="16sp" />
 
-        <!-- EditText for entering the post text -->
+
         <Spinner
             android:id="@+id/categorySpinner"
             android:layout_width="wrap_content"
@@ -37,6 +73,7 @@
             android:entries="@array/category_array"
             android:minHeight="48dp" />
 
+        <!-- EditText for entering the post text -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/inputLayout"
             android:layout_width="match_parent"

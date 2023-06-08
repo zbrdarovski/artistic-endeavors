@@ -1,8 +1,10 @@
 package si.um.feri.artisticendeavors.activities
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -37,6 +39,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listenerRegistration: ListenerRegistration
     private lateinit var toolbar: Toolbar
 
+    private var currentFilter: String? = null
+
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +59,16 @@ class MainActivity : AppCompatActivity() {
         binding.rvPosts.adapter = adapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
 
+        binding.categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                applyFilter()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Handle when no category is selected
+            }
+        }
+
         val postsReference = db.collection("posts").limit(20)
             .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
         listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
@@ -67,6 +81,7 @@ class MainActivity : AppCompatActivity() {
         listenerRegistration.remove()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun handleSnapshot(snapshot: QuerySnapshot?, exception: FirebaseFirestoreException?) {
         if (exception != null || snapshot == null) {
             Timber.e(exception?.message)
@@ -74,24 +89,29 @@ class MainActivity : AppCompatActivity() {
         }
 
         val listOfPosts = snapshot.toObjects(Post::class.java)
-        binding.noPosts.visibility = if (listOfPosts.isEmpty()) View.VISIBLE else View.GONE
 
-        val previousSize = posts.size
-        posts.apply {
-            clear()
-            addAll(listOfPosts)
+        posts.clear()
+        posts.addAll(listOfPosts.filter { post ->
+            currentFilter?.let {
+                post.category == it
+            } ?: true
+        })
+
+        adapter.notifyDataSetChanged()
+    }
+
+    private fun applyFilter() {
+        currentFilter = binding.categorySpinner.selectedItem.toString()
+        listenerRegistration.remove()
+
+        val postsReference = db.collection("posts").limit(20)
+            .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
+        if (currentFilter != null) {
+            postsReference.whereEqualTo("category", currentFilter)
         }
-        val newSize = posts.size
 
-        if (previousSize == newSize) {
-            // Notify all items changed if the size remains the same
-            adapter.notifyItemRangeChanged(0, newSize)
-        } else if (previousSize < newSize) {
-            // New items added, notify only the new range
-            adapter.notifyItemRangeInserted(previousSize, newSize - previousSize)
-        } else {
-            // Items removed, notify only the previous range
-            adapter.notifyItemRangeRemoved(newSize, previousSize - newSize)
+        listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
+            handleSnapshot(snapshot, exception)
         }
     }
 }

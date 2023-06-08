@@ -1,5 +1,6 @@
 package si.um.feri.artisticendeavors.adapters
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -34,6 +35,12 @@ class ProfilePostAdapter(private val context: Context, private val posts: Mutabl
     private val currentUserId = auth.currentUser?.uid
 
     private val tag: String = "ProfilePostAdapter"
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clear() {
+        posts.clear()
+        notifyDataSetChanged()
+    }
 
     fun color(text: String, colorHex: String): Spannable {
         val spannableString = SpannableString(text)

@@ -3,6 +3,7 @@ package si.um.feri.artisticendeavors.activities
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
@@ -38,6 +39,7 @@ class ProfileActivity : AppCompatActivity() {
     private val tag: String by lazy { getString(R.string.profile_activity) }
     private val photoshop: Photoshop by lazy { Photoshop(this, activityResultRegistry) }
     private lateinit var toolbar: Toolbar
+    private var selectedCategory: String = ""
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,42 +89,64 @@ class ProfileActivity : AppCompatActivity() {
                 Timber.e(tag, errorMessage)
             }
 
-
-
         binding.addPost.setOnClickListener {
             val activitySwitcher = ActivitySwitcher()
             activitySwitcher.startNewActivity(this, AddPostActivity::class.java)
         }
 
-        val postsReference = db.collection("posts").limit(20)
-            .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
-
-        listenerRegistration = lazy {
-            postsReference.addSnapshotListener { snapshot, exception ->
-                if (exception != null || snapshot == null) {
-                    Timber.e(tag, "Error fetching posts: $exception")
-                    return@addSnapshotListener
-                }
-
-                val listOfPosts = snapshot.toObjects(Post::class.java)
-                val filteredPosts = listOfPosts.filter { it.user?.username == currentUsername }
-
-                binding.noPosts.visibility =
-                    if (filteredPosts.isEmpty()) View.VISIBLE else View.GONE
-
-                val diffCallback = ProfilePostDiffCallback(posts, filteredPosts)
-                val diffResult = DiffUtil.calculateDiff(diffCallback)
-
-                posts.clear()
-                posts.addAll(filteredPosts)
-                diffResult.dispatchUpdatesTo(adapter)
+        binding.categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedCategory = parent?.getItemAtPosition(position).toString()
+                adapter.clear() // Clear the adapter
+                updatePostsReference()
             }
-        }.value
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Handle when no category is selected
+            }
+        }
+
+        updatePostsReference()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         listenerRegistration.remove()
+    }
+
+    private fun updatePostsReference() {
+        val currentUsername = auth.currentUser?.displayName
+        val postsReference = db.collection("posts")
+            .whereEqualTo("user.username", currentUsername)
+            .whereEqualTo("category", selectedCategory)
+            .limit(20)
+            .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
+
+        listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
+            if (exception != null || snapshot == null) {
+                Timber.e(tag, "Error fetching posts: $exception")
+                return@addSnapshotListener
+            }
+
+            val listOfPosts = mutableListOf<Post>()
+            for (document in snapshot.documents) {
+                val post = document.toObject(Post::class.java)
+                if (post != null) {
+                    listOfPosts.add(post)
+                }
+            }
+
+            val isEmpty = listOfPosts.isEmpty()
+
+            if (!isEmpty) {
+                val diffCallback = ProfilePostDiffCallback(posts, listOfPosts)
+                val diffResult = DiffUtil.calculateDiff(diffCallback)
+
+                posts.clear()
+                posts.addAll(listOfPosts)
+                diffResult.dispatchUpdatesTo(adapter)
+            }
+        }
     }
 
     private inner class ProfilePostDiffCallback(

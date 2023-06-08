@@ -2,6 +2,7 @@ package si.um.feri.artisticendeavors.activities
 
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,6 +33,7 @@ class UserProfileActivity : AppCompatActivity() {
     private val tag: String by lazy { getString(R.string.user_profile_activity) }
     private val photoshop: Photoshop by lazy { Photoshop(this, activityResultRegistry) }
     private var userId: String? = null
+    private var selectedCategory: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,10 +77,32 @@ class UserProfileActivity : AppCompatActivity() {
             }
         }
 
+        binding.categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedCategory = parent?.getItemAtPosition(position).toString()
+                adapter.clear() // Clear the adapter
+                updatePostsReference()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Handle when no category is selected
+            }
+        }
+
+        updatePostsReference()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        listenerRegistration.remove()
+    }
+
+    private fun updatePostsReference() {
         val postsReference =
             db.collection("posts")
                 .orderBy("creation_time_milliseconds", Query.Direction.DESCENDING)
                 .whereEqualTo("user.id", userId)
+                .whereEqualTo("category", selectedCategory)
 
         listenerRegistration = postsReference.addSnapshotListener { snapshot, exception ->
             if (exception != null || snapshot == null) {
@@ -88,8 +112,6 @@ class UserProfileActivity : AppCompatActivity() {
 
             val listOfPosts = snapshot.toObjects(Post::class.java)
 
-            binding.noPosts.visibility = if (listOfPosts.isEmpty()) View.VISIBLE else View.GONE
-
             val diffCallback = UserProfilePostDiffCallback(posts, listOfPosts)
             val diffResult = DiffUtil.calculateDiff(diffCallback)
 
@@ -97,11 +119,6 @@ class UserProfileActivity : AppCompatActivity() {
             posts.addAll(listOfPosts)
             diffResult.dispatchUpdatesTo(adapter)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        listenerRegistration.remove()
     }
 
     private inner class UserProfilePostDiffCallback(

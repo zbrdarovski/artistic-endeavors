@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -83,6 +84,7 @@ class AddPostActivity : AppCompatActivity() {
                         uploadTask.addOnSuccessListener {
                             // Image uploaded successfully
                             imageRef.downloadUrl.addOnSuccessListener { uri ->
+                                binding.progress.visibility = View.GONE
                                 downloadUrl = uri.toString()
                                 binding.imageView.load(downloadUrl)
                                 binding.sendButton.isEnabled = true
@@ -92,18 +94,22 @@ class AddPostActivity : AppCompatActivity() {
                                     R.string.error_getting_download_url, exception
                                 )
                                 Timber.e(tag, errorMessage)
+                                binding.progress.visibility = View.GONE
                                 binding.imageView.isEnabled = true
                             }
                         }.addOnFailureListener { exception ->
                             Timber.e(tag, exception.message)
+                            binding.progress.visibility = View.GONE
                             binding.imageView.isEnabled = true
                         }
                     } else {
                         // Enable the imageView
+                        binding.progress.visibility = View.GONE
                         binding.imageView.isEnabled = true
                     }
                 } else {
                     // Enable the imageView
+                    binding.progress.visibility = View.GONE
                     binding.imageView.isEnabled = true
                 }
             }
@@ -203,6 +209,7 @@ class AddPostActivity : AppCompatActivity() {
 
         binding.imageView.setOnClickListener {
             binding.imageView.isEnabled = false
+            binding.progress.visibility = View.VISIBLE
             // Launch the gallery
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"

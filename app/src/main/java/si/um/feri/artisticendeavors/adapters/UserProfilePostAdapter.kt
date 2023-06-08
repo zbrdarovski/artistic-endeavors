@@ -1,5 +1,6 @@
 package si.um.feri.artisticendeavors.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.text.format.DateUtils
@@ -20,6 +21,12 @@ class UserProfilePostAdapter(private val context: Context, private val posts: Mu
     RecyclerView.Adapter<UserProfilePostAdapter.ViewHolder>() {
 
     private val tag = "UserProfilePostAdapter"
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clear() {
+        posts.clear()
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
