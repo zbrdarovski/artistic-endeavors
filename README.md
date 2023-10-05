@@ -12,6 +12,9 @@
 ### Testirana na:
 * Samsung Galaxy A40
 
+### Predstavitev:
+![Artistic Endeavors](artistic-endeavors.mp4)
+
 ### Pripisovanje:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
 - [Eye icons](https://www.flaticon.com/free-icons/eye) - Eye icons created by torskaya - Flaticon
