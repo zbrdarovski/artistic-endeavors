@@ -13,7 +13,7 @@
 * Samsung Galaxy A40
 
 ### Predstavitev:
-![Artistic Endeavors](artistic-endeavors.mp4)
+<iframe width="560" height="315" src="https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing" frameborder="0" allowfullscreen></iframe>
 
 ### Pripisovanje:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
