@@ -1,22 +1,13 @@
 # Artistic Endeavors
 
-### Namen: 
-* Mobilna aplikacija za pomoč umetnikom pri prodaji njihovih izdelkov in storitev
+### Purpose: 
+* Mobile app to help artists by selling their products and services
 
-### Avtor:
-* Zdravko Brdarovski
-
-### Tehnologije:
-* Kotlin
-
-### Testirana na:
+### Tested on:
 * Samsung Galaxy A40
 
-### Predstavitev:
-- [Artistic Endeavors](https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing) - Artistic Endeavors Project Video Presentation
-
-- BRDAROVSKI, Zdravko, 2023, Mobilna aplikacija za pomoč umetnikom pri prodaji njihovih izdelkov in storitev : diplomsko delo [na spletu]. Diplomsko delo. Maribor : Z. Brdarovski. [Dostopano 27 maj 2024]. Pridobljeno s: [https://dk.um.si/IzpisGradiva.php?lang=slv&id=85355](https://dk.um.si/IzpisGradiva.php?lang=slv&id=85355)
-
+### Video presentation:
+[![Artistic Endeavors]([https://share.gifyoutube.com/KzB6Gb.gif)](https://www.youtube.com/watch?v=ek1j272iAmc](https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing))
 
 ### Pripisovanje:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
