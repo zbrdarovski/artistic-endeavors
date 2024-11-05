@@ -8,8 +8,9 @@
 
 ### Video presentation:
 [![Artistic Endeavors]([https://share.gifyoutube.com/KzB6Gb.gif)](https://www.youtube.com/watch?v=ek1j272iAmc](https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing))
+[![Artistic Endeavors](https://share.gifyoutube.com/KzB6Gb.gif)]([https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing](https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing)
 
-### Pripisovanje:
+### Assets:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
 - [Eye icons](https://www.flaticon.com/free-icons/eye) - Eye icons created by torskaya - Flaticon
 - [Hidden icons](https://www.flaticon.com/free-icons/hidden) - Hidden icons created by torskaya - Flaticon
