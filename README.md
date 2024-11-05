@@ -7,7 +7,7 @@
 * Samsung Galaxy A40
 
 ### Video presentation:
-<video src="https://drive.google.com/uc?export=download&id=1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY" width="180" controls></video>
+[Watch the video on Google Drive](https://drive.google.com/file/d/1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY/view?usp=sharing)
 
 ### Assets:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
