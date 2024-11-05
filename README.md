@@ -7,7 +7,7 @@
 * Samsung Galaxy A40
 
 ### Video presentation:
-<video src='./artistic-endeavors.mp4' width=180/></video>
+<video src="https://drive.google.com/uc?export=download&id=1EQzkZVaUu22d4oOrpAJpGakqzZyGsEXY" width="180" controls></video>
 
 ### Assets:
 - [Art icons](https://www.flaticon.com/free-icons/art) - Art icons created by Freepik - Flaticon
